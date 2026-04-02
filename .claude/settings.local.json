@@ -33,7 +33,10 @@
       "Bash(grep -E \"\\\\.\\(html|js|jsx\\)$\")",
       "Bash(xargs grep:*)",
       "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/cleanup\" -H \"x-api-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\" -H \"Content-Type: application/json\")",
-      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-articles\" -H \"x-api-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\" -H \"Content-Type: application/json\")"
+      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-articles\" -H \"x-api-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\" -H \"Content-Type: application/json\")",
+      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-articles?region=africa\" -H \"x-api-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\")",
+      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/cleanup\" -H \"x-api-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\")",
+      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-articles?region=global\" -H \"x-api-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\")"
     ]
   }
 }

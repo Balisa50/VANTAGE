@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
-import { fetchHNSignals, getHNAsHeadlines, formatHNContext } from "../../lib/hackernews";
+// HN disabled in pipeline to stay within 60s timeout
 import { fetchRegionalHeadlines, fetchGlobalHeadlines } from "../../lib/feeds";
 
 export const maxDuration = 60;
@@ -33,35 +33,23 @@ async function handleGenerate(req: NextRequest) {
 
   try {
     let headlines;
-    let hnSignals = null;
 
     if (regionToRun === "global") {
-      // Global: mix NewsAPI + RSS feeds + HackerNews
-      const [newsApi, rssFeed, hn] = await Promise.all([
-        fetchTopTechHeadlines().catch(() => []),
+      // Global: RSS feeds + NewsAPI fallback (skip HN to stay in timeout)
+      const [rssFeed, newsApi] = await Promise.all([
         fetchGlobalHeadlines().catch(() => []),
-        fetchHNSignals().catch(() => null),
+        fetchTopTechHeadlines().catch(() => []),
       ]);
-      hnSignals = hn;
-      const hnHeadlines = hn ? getHNAsHeadlines(hn) : [];
-      headlines = [...hnHeadlines, ...rssFeed, ...newsApi];
+      headlines = rssFeed.length > 0 ? rssFeed : newsApi;
     } else {
-      // Regional: use REAL regional publications via RSS
-      // Fall back to NewsAPI only if RSS returns nothing
-      const [rssHeadlines, newsApiFallback] = await Promise.all([
-        fetchRegionalHeadlines(regionToRun).catch(() => []),
-        fetchTopTechHeadlines(regionToRun).catch(() => []),
-      ]);
-      headlines = rssHeadlines.length > 0 ? rssHeadlines : newsApiFallback;
+      // Regional: REAL regional publications via RSS
+      const rssHeadlines = await fetchRegionalHeadlines(regionToRun).catch(() => []);
+      headlines = rssHeadlines.length > 0
+        ? rssHeadlines
+        : await fetchTopTechHeadlines(regionToRun).catch(() => []);
     }
 
-    // Build cross-signal context
-    const crossSignalBrief = hnSignals
-      ? `\n\nCROSS-SIGNAL INTELLIGENCE:\n${formatHNContext(hnSignals)}`
-      : "";
-
     const activeSources: string[] = ["News"];
-    if (hnSignals) activeSources.push("HackerNews");
 
     const regionLabel = REGIONS[regionToRun]?.label ?? "Global";
     const results: { slug: string; headline: string; status: string }[] = [];
@@ -89,8 +77,6 @@ async function handleGenerate(req: NextRequest) {
         if (regionToRun !== "global") {
           userContent += `\n\nIMPORTANT: This story is from ${news.source.name}, a ${regionLabel} publication. Write your analysis from within this region's perspective. Don't treat it as an outsider looking in. Understand the local market dynamics, the key players in this region, and why this story matters to people living and building here.`;
         }
-
-        userContent += crossSignalBrief;
 
         const message = await getAnthropicClient().messages.create({
           model: "claude-sonnet-4-20250514",
