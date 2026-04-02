@@ -3,6 +3,7 @@ import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
 import { fetchHNSignals, getHNAsHeadlines, formatHNContext } from "../../lib/hackernews";
+import { fetchRegionalHeadlines, fetchGlobalHeadlines } from "../../lib/feeds";
 
 export const maxDuration = 60;
 
@@ -31,20 +32,30 @@ async function handleGenerate(req: NextRequest) {
   const regionToRun = regionParam && REGIONS[regionParam] ? regionParam : "global";
 
   try {
-    // Fetch news + HN in parallel (skip Reddit in pipeline — too slow)
-    const [newsHeadlines, hnSignals] = await Promise.all([
-      fetchTopTechHeadlines(regionToRun === "global" ? undefined : regionToRun),
-      regionToRun === "global" ? fetchHNSignals().catch(() => null) : Promise.resolve(null),
-    ]);
+    let headlines;
+    let hnSignals = null;
 
-    let headlines = newsHeadlines;
-
-    if (regionToRun === "global" && hnSignals) {
-      const hnHeadlines = getHNAsHeadlines(hnSignals);
-      headlines = [...hnHeadlines, ...headlines];
+    if (regionToRun === "global") {
+      // Global: mix NewsAPI + RSS feeds + HackerNews
+      const [newsApi, rssFeed, hn] = await Promise.all([
+        fetchTopTechHeadlines().catch(() => []),
+        fetchGlobalHeadlines().catch(() => []),
+        fetchHNSignals().catch(() => null),
+      ]);
+      hnSignals = hn;
+      const hnHeadlines = hn ? getHNAsHeadlines(hn) : [];
+      headlines = [...hnHeadlines, ...rssFeed, ...newsApi];
+    } else {
+      // Regional: use REAL regional publications via RSS
+      // Fall back to NewsAPI only if RSS returns nothing
+      const [rssHeadlines, newsApiFallback] = await Promise.all([
+        fetchRegionalHeadlines(regionToRun).catch(() => []),
+        fetchTopTechHeadlines(regionToRun).catch(() => []),
+      ]);
+      headlines = rssHeadlines.length > 0 ? rssHeadlines : newsApiFallback;
     }
 
-    // Build cross-signal context (lightweight — just HN)
+    // Build cross-signal context
     const crossSignalBrief = hnSignals
       ? `\n\nCROSS-SIGNAL INTELLIGENCE:\n${formatHNContext(hnSignals)}`
       : "";
@@ -56,7 +67,6 @@ async function handleGenerate(req: NextRequest) {
     const results: { slug: string; headline: string; status: string }[] = [];
     let created = 0;
 
-    // 1 article per region per run — stays within 60s timeout
     for (const news of headlines) {
       if (created >= 1) break;
 
@@ -77,7 +87,7 @@ async function handleGenerate(req: NextRequest) {
         let userContent = `Write a deep analytical article about this tech story:\n\nHeadline: ${news.title}\nDescription: ${news.description ?? "No description available."}\nSource: ${news.source.name}\nURL: ${news.url}\nRegion: ${regionLabel}`;
 
         if (regionToRun !== "global") {
-          userContent += `\n\nThis story comes from the ${regionLabel} tech ecosystem. Frame your analysis through this region's specific context, power dynamics, and market realities.`;
+          userContent += `\n\nIMPORTANT: This story is from ${news.source.name}, a ${regionLabel} publication. Write your analysis from within this region's perspective. Don't treat it as an outsider looking in. Understand the local market dynamics, the key players in this region, and why this story matters to people living and building here.`;
         }
 
         userContent += crossSignalBrief;
@@ -97,7 +107,6 @@ async function handleGenerate(req: NextRequest) {
           .trim();
         const article = JSON.parse(text);
 
-        // Skip non-tech stories
         if (article.skip) {
           results.push({ slug, headline: news.title, status: `skipped: ${article.reason}` });
           continue;
