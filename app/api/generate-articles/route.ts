@@ -3,12 +3,10 @@ import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
 import { fetchHNSignals, getHNAsHeadlines, formatHNContext } from "../../lib/hackernews";
-import { fetchSocialSignals, formatSocialContext } from "../../lib/social";
 
 export const maxDuration = 60;
 
 const REGION_CHAIN = ["global", "africa", "asia", "europe", "americas", "middleeast"];
-const ARTICLES_PER_REGION = 2;
 
 export async function GET(req: NextRequest) {
   return handleGenerate(req);
@@ -33,11 +31,10 @@ async function handleGenerate(req: NextRequest) {
   const regionToRun = regionParam && REGIONS[regionParam] ? regionParam : "global";
 
   try {
-    // Fetch all signal sources in parallel
-    const [newsHeadlines, hnSignals, redditSignals] = await Promise.all([
+    // Fetch news + HN in parallel (skip Reddit in pipeline — too slow)
+    const [newsHeadlines, hnSignals] = await Promise.all([
       fetchTopTechHeadlines(regionToRun === "global" ? undefined : regionToRun),
       regionToRun === "global" ? fetchHNSignals().catch(() => null) : Promise.resolve(null),
-      fetchSocialSignals().catch(() => null),
     ]);
 
     let headlines = newsHeadlines;
@@ -47,24 +44,21 @@ async function handleGenerate(req: NextRequest) {
       headlines = [...hnHeadlines, ...headlines];
     }
 
-    // Build cross-signal context
-    const signalContext: string[] = [];
-    if (hnSignals) signalContext.push(formatHNContext(hnSignals));
-    if (redditSignals) signalContext.push(formatSocialContext(redditSignals));
-    const crossSignalBrief = signalContext.length > 0
-      ? `\n\nCROSS-SIGNAL INTELLIGENCE (use this to enrich your analysis):\n${signalContext.join("\n\n")}`
+    // Build cross-signal context (lightweight — just HN)
+    const crossSignalBrief = hnSignals
+      ? `\n\nCROSS-SIGNAL INTELLIGENCE:\n${formatHNContext(hnSignals)}`
       : "";
 
     const activeSources: string[] = ["News"];
     if (hnSignals) activeSources.push("HackerNews");
-    if (redditSignals) activeSources.push("Reddit");
 
     const regionLabel = REGIONS[regionToRun]?.label ?? "Global";
     const results: { slug: string; headline: string; status: string }[] = [];
     let created = 0;
 
+    // 1 article per region per run — stays within 60s timeout
     for (const news of headlines) {
-      if (created >= ARTICLES_PER_REGION) break;
+      if (created >= 1) break;
 
       const slug = slugify(news.title);
 
@@ -90,7 +84,7 @@ async function handleGenerate(req: NextRequest) {
 
         const message = await getAnthropicClient().messages.create({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 4000,
+          max_tokens: 3000,
           system: ARTICLE_SYSTEM_PROMPT,
           messages: [{ role: "user", content: userContent }],
         });
@@ -103,7 +97,7 @@ async function handleGenerate(req: NextRequest) {
           .trim();
         const article = JSON.parse(text);
 
-        // Skip non-tech stories that the model flagged
+        // Skip non-tech stories
         if (article.skip) {
           results.push({ slug, headline: news.title, status: `skipped: ${article.reason}` });
           continue;
