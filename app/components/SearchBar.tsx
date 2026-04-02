@@ -63,7 +63,7 @@ export default function SearchBar() {
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Search stories..."
-          className="w-full bg-surface border border-border rounded-lg px-4 py-2 pl-9 text-sm text-text-primary placeholder-text-secondary outline-none focus:border-accent-amber/50 transition-colors"
+          className="w-full bg-surface border border-border rounded-lg px-4 py-2 pl-9 text-sm text-text-primary placeholder-text-secondary outline-none focus:border-accent-amber/30 focus:shadow-[0_0_12px_rgba(245,158,11,0.04)] transition-all"
         />
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-secondary"
@@ -84,7 +84,7 @@ export default function SearchBar() {
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-surface border border-border rounded-lg shadow-2xl z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full mt-2 w-full bg-surface-elevated border border-border rounded-lg shadow-2xl z-50 max-h-80 overflow-y-auto">
           {results.map((article) => (
             <Link
               key={article.id}
@@ -93,7 +93,7 @@ export default function SearchBar() {
                 setOpen(false);
                 setQuery("");
               }}
-              className="block px-4 py-3 hover:bg-border/30 transition-colors border-b border-border last:border-b-0"
+              className="block px-4 py-3 hover:bg-surface transition-colors border-b border-border/50 last:border-b-0"
             >
               <div className="flex items-center gap-2 mb-1">
                 {article.category && (
@@ -111,7 +111,7 @@ export default function SearchBar() {
       )}
 
       {open && query.length >= 2 && results.length === 0 && !loading && (
-        <div className="absolute top-full mt-2 w-full bg-surface border border-border rounded-lg shadow-2xl z-50 p-4">
+        <div className="absolute top-full mt-2 w-full bg-surface-elevated border border-border rounded-lg shadow-2xl z-50 p-4">
           <p className="text-sm text-text-secondary text-center">
             No stories found
           </p>
