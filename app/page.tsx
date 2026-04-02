@@ -35,16 +35,49 @@ export default async function HomePage() {
   const totalCount = count ?? 0;
   const lastUpdated = articles.length > 0 ? articles[0].published_at : null;
 
+  // Count unique regions and sources
+  const regionSet = new Set(articles.map((a) => a.region).filter(Boolean));
+  const triSignalCount = articles.filter(
+    (a) => (a.signal_sources?.length ?? 0) >= 3
+  ).length;
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Subtle noise texture */}
+      <div className="noise-overlay" />
+
       <KeyboardShortcuts />
       <Masthead />
 
-      {lastUpdated && (
-        <div className="text-center py-2.5 border-b border-border">
-          <p className="text-[10px] sm:text-xs font-mono text-text-secondary">
-            Latest: {timeAgo(lastUpdated)}
-          </p>
+      {/* Stats ticker */}
+      {totalCount > 0 && (
+        <div className="border-b border-border bg-surface/50 backdrop-blur-sm">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-center gap-4 sm:gap-8 text-[10px] sm:text-xs font-mono text-text-secondary">
+            <span>
+              <span className="text-text-primary font-medium">{totalCount}</span> stories
+            </span>
+            <span className="text-border">/</span>
+            <span>
+              <span className="text-text-primary font-medium">{regionSet.size}</span> regions
+            </span>
+            {triSignalCount > 0 && (
+              <>
+                <span className="text-border">/</span>
+                <span>
+                  <span className="text-accent-amber font-medium">{triSignalCount}</span> tri-signal
+                </span>
+              </>
+            )}
+            {lastUpdated && (
+              <>
+                <span className="text-border">/</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-accent-green pulse-dot" />
+                  {timeAgo(lastUpdated)}
+                </span>
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -58,18 +91,18 @@ export default async function HomePage() {
 
       <DigestSignup />
 
-      <footer className="border-t border-border mt-auto">
+      <footer className="border-t border-border mt-auto bg-surface/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 text-center space-y-2">
           <p className="text-[10px] sm:text-xs text-text-secondary font-mono leading-relaxed">
-            Tri-signal intelligence powered by AI. Global coverage across 6
+            Tri-signal intelligence powered by Claude. Global coverage across 6
             regions.
           </p>
-          <p className="text-[10px] text-text-secondary/40 font-mono hidden sm:block">
-            <kbd className="px-1 py-0.5 rounded bg-border/50">j</kbd>
-            <kbd className="px-1 py-0.5 rounded bg-border/50 ml-1">k</kbd>{" "}
+          <p className="text-[10px] text-text-secondary/30 font-mono hidden sm:block">
+            <kbd className="px-1 py-0.5 rounded bg-border/30 text-text-secondary/50">j</kbd>
+            <kbd className="px-1 py-0.5 rounded bg-border/30 text-text-secondary/50 ml-1">k</kbd>{" "}
             navigate ·{" "}
-            <kbd className="px-1 py-0.5 rounded bg-border/50">/</kbd> search ·{" "}
-            <kbd className="px-1 py-0.5 rounded bg-border/50">Enter</kbd> open
+            <kbd className="px-1 py-0.5 rounded bg-border/30 text-text-secondary/50">/</kbd> search ·{" "}
+            <kbd className="px-1 py-0.5 rounded bg-border/30 text-text-secondary/50">Enter</kbd> open
           </p>
         </div>
       </footer>

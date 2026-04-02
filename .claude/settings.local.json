@@ -23,7 +23,15 @@
       "Bash(echo \"$VANTAGE_ANTHROPIC_KEY\")",
       "Bash(echo \"$NEWS_API_KEY\")",
       "Bash(echo \"$CRON_SECRET\")",
-      "Bash(printf 'https://intelligent-wing.vercel.app')"
+      "Bash(printf 'https://intelligent-wing.vercel.app')",
+      "Bash(git -C \"C:/Users/Abdoulie Balisa/OneDrive/Desktop/VANTAGE\" remote -v)",
+      "Bash(gh repo:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git -C \"C:/Users/Abdoulie Balisa/OneDrive/Desktop/VANTAGE\" remote get-url origin)",
+      "Bash(git -C \"C:/Users/Abdoulie Balisa/OneDrive/Desktop/VANTAGE\" remote set-url origin https://github.com/Balisa50/VANTAGE.git)",
+      "WebFetch(domain:vantage-three-chi.vercel.app)",
+      "Bash(grep -E \"\\\\.\\(html|js|jsx\\)$\")",
+      "Bash(xargs grep:*)"
     ]
   }
 }

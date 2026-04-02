@@ -1,5 +1,4 @@
 import Link from "next/link";
-import SignalScore from "./SignalScore";
 import type { Article } from "../lib/supabase";
 
 function timeAgo(dateStr: string): string {
@@ -24,23 +23,56 @@ const REGION_LABELS: Record<string, string> = {
   middleeast: "Middle East",
 };
 
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  AI: "from-amber-500/10 to-orange-500/5",
-  Infrastructure: "from-blue-500/10 to-cyan-500/5",
-  Startups: "from-green-500/10 to-emerald-500/5",
-  "Big Tech": "from-purple-500/10 to-violet-500/5",
-  Policy: "from-red-500/10 to-rose-500/5",
-  Markets: "from-teal-500/10 to-sky-500/5",
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
+  AI: { bg: "bg-amber-500/8", text: "text-amber-400", bar: "bg-amber-400" },
+  Infrastructure: { bg: "bg-blue-500/8", text: "text-blue-400", bar: "bg-blue-400" },
+  Startups: { bg: "bg-emerald-500/8", text: "text-emerald-400", bar: "bg-emerald-400" },
+  "Big Tech": { bg: "bg-purple-500/8", text: "text-purple-400", bar: "bg-purple-400" },
+  Policy: { bg: "bg-red-500/8", text: "text-red-400", bar: "bg-red-400" },
+  Markets: { bg: "bg-cyan-500/8", text: "text-cyan-400", bar: "bg-cyan-400" },
 };
 
-const CATEGORY_ACCENT: Record<string, string> = {
-  AI: "text-amber-400",
-  Infrastructure: "text-blue-400",
-  Startups: "text-green-400",
-  "Big Tech": "text-purple-400",
-  Policy: "text-red-400",
-  Markets: "text-teal-400",
-};
+const DEFAULT_COLORS = { bg: "bg-accent-amber/8", text: "text-accent-amber", bar: "bg-accent-amber" };
+
+function SignalBadge({ sources }: { sources: string[] }) {
+  if (sources.length >= 3) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-full bg-accent-amber/10 text-accent-amber border border-accent-amber/20">
+        <span className="w-1 h-1 rounded-full bg-accent-amber pulse-dot" />
+        Tri-Signal
+      </span>
+    );
+  }
+  if (sources.length === 2) {
+    return (
+      <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+        Dual Signal
+      </span>
+    );
+  }
+  return null;
+}
+
+function ScoreIndicator({ score }: { score: number }) {
+  const color =
+    score >= 70
+      ? "text-accent-red"
+      : score >= 40
+        ? "text-accent-amber"
+        : "text-accent-green";
+  const bg =
+    score >= 70
+      ? "bg-accent-red/10"
+      : score >= 40
+        ? "bg-accent-amber/10"
+        : "bg-accent-green/10";
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-mono ${color} ${bg} px-2 py-0.5 rounded-full`}>
+      {score}
+    </span>
+  );
+}
 
 export default function ArticleCard({
   article,
@@ -49,93 +81,126 @@ export default function ArticleCard({
   article: Article;
   featured?: boolean;
 }) {
-  const gradient =
-    CATEGORY_GRADIENTS[article.category ?? ""] ?? "from-accent-amber/10 to-accent-amber/5";
-  const accent =
-    CATEGORY_ACCENT[article.category ?? ""] ?? "text-accent-amber";
+  const colors = CATEGORY_COLORS[article.category ?? ""] ?? DEFAULT_COLORS;
   const signalSources = article.signal_sources ?? [];
-  const signalCount = signalSources.length;
+
+  if (featured) {
+    return (
+      <Link href={`/article/${article.slug}`} className="group block">
+        <article className="relative rounded-xl border border-border bg-surface-elevated overflow-hidden card-glow featured-glow">
+          <div className="flex">
+            {/* Category accent bar */}
+            <div className={`category-bar ${colors.bar} flex-shrink-0`} />
+
+            <div className="flex-1 p-6 sm:p-8 md:p-10">
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <span className={`text-xs font-mono tracking-wider uppercase ${colors.text}`}>
+                  {article.category}
+                </span>
+                <SignalBadge sources={signalSources} />
+                {article.region && article.region !== "global" && (
+                  <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-full bg-border text-text-secondary">
+                    {REGION_LABELS[article.region] ?? article.region}
+                  </span>
+                )}
+                <ScoreIndicator score={article.signal_score} />
+              </div>
+
+              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-text-primary group-hover:text-accent-amber transition-colors leading-tight mb-3">
+                {article.headline}
+              </h2>
+
+              {article.subheadline && (
+                <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-4 line-clamp-2">
+                  {article.subheadline}
+                </p>
+              )}
+
+              <div className="flex items-center gap-4 text-xs text-text-secondary font-mono">
+                <span>{timeAgo(article.published_at)}</span>
+                <span>{Math.ceil(article.full_body.split(" ").length / 200)} min read</span>
+                {signalSources.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {signalSources.map((src, i) => (
+                      <span
+                        key={i}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          src === "HackerNews"
+                            ? "bg-orange-400"
+                            : src === "Reddit"
+                              ? "bg-purple-400"
+                              : "bg-accent-amber"
+                        }`}
+                        title={src}
+                      />
+                    ))}
+                  </div>
+                )}
+                <span className="ml-auto text-accent-amber/60 group-hover:text-accent-amber transition-colors">
+                  Read analysis &rarr;
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </Link>
+    );
+  }
 
   return (
     <Link href={`/article/${article.slug}`} className="group block">
-      <article className="rounded-lg border border-border bg-surface hover:border-accent-amber/30 transition-all duration-300 overflow-hidden">
-        {/* Category gradient header */}
-        <div
-          className={`bg-gradient-to-br ${gradient} ${
-            featured ? "px-5 py-6 sm:px-8 sm:py-10" : "px-4 py-5 sm:px-6 sm:py-6"
-          }`}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            {article.category && (
-              <span
-                className={`text-xs font-mono tracking-wider uppercase ${accent}`}
-              >
+      <article className="relative h-full rounded-lg border border-border bg-surface overflow-hidden card-glow">
+        <div className="flex h-full">
+          {/* Category accent bar */}
+          <div className={`category-bar ${colors.bar} flex-shrink-0`} />
+
+          <div className="flex-1 flex flex-col p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <span className={`text-[11px] font-mono tracking-wider uppercase ${colors.text}`}>
                 {article.category}
               </span>
-            )}
-            {signalCount >= 3 && (
-              <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-full bg-accent-amber/15 text-accent-amber border border-accent-amber/20">
-                Tri-Signal
-              </span>
-            )}
-            {signalCount === 2 && (
-              <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20">
-                Dual Signal
-              </span>
-            )}
-          </div>
-          <h2
-            className={`font-serif text-text-primary group-hover:text-accent-amber transition-colors leading-tight ${
-              featured ? "text-3xl md:text-4xl" : "text-xl md:text-2xl"
-            }`}
-          >
-            {article.headline}
-          </h2>
-          {article.subheadline && (
-            <p
-              className={`mt-3 text-text-secondary leading-relaxed ${
-                featured ? "text-lg" : "text-sm"
-              }`}
-            >
-              {article.subheadline}
-            </p>
-          )}
-        </div>
-
-        <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-border/50">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
-              <span className="text-xs text-text-secondary font-mono">
-                {timeAgo(article.published_at)}
-              </span>
-              <span className="text-xs text-text-secondary font-mono">
-                {Math.ceil(article.full_body.split(" ").length / 200)} min read
-              </span>
+              <SignalBadge sources={signalSources} />
               {article.region && article.region !== "global" && (
                 <span className="text-[10px] font-mono text-text-secondary px-1.5 py-0.5 rounded bg-border/50">
                   {REGION_LABELS[article.region] ?? article.region}
                 </span>
               )}
-              {signalSources.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  {signalSources.map((src, i) => (
-                    <span
-                      key={i}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        src === "HackerNews"
-                          ? "bg-orange-400"
-                          : src === "Reddit"
-                            ? "bg-purple-400"
-                            : "bg-accent-amber"
-                      }`}
-                      title={src}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
-            <div className="flex-1 max-w-48">
-              <SignalScore score={article.signal_score} />
+
+            <h2 className="font-serif text-lg sm:text-xl text-text-primary group-hover:text-accent-amber transition-colors leading-snug mb-2 line-clamp-3">
+              {article.headline}
+            </h2>
+
+            {article.subheadline && (
+              <p className="text-sm text-text-secondary leading-relaxed mb-3 line-clamp-2 flex-1">
+                {article.subheadline}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-border/50">
+              <div className="flex items-center gap-2 text-[11px] text-text-secondary font-mono">
+                <span>{timeAgo(article.published_at)}</span>
+                <span className="text-border">/</span>
+                <span>{Math.ceil(article.full_body.split(" ").length / 200)}m</span>
+                {signalSources.length > 0 && (
+                  <div className="flex items-center gap-1 ml-1">
+                    {signalSources.map((src, i) => (
+                      <span
+                        key={i}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          src === "HackerNews"
+                            ? "bg-orange-400"
+                            : src === "Reddit"
+                              ? "bg-purple-400"
+                              : "bg-accent-amber"
+                        }`}
+                        title={src}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <ScoreIndicator score={article.signal_score} />
             </div>
           </div>
         </div>

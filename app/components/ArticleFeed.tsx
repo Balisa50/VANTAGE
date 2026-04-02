@@ -32,7 +32,6 @@ export default function ArticleFeed({
         setArticles(data.articles);
       }
     } catch {
-      // Fall back to client-side filter
       let filtered = initialArticles;
       if (cat !== "All") filtered = filtered.filter((a) => a.category === cat);
       if (reg !== "all") filtered = filtered.filter((a) => a.region === reg);
@@ -64,7 +63,7 @@ export default function ArticleFeed({
 
   return (
     <>
-      <div className="space-y-4 mb-10">
+      <div className="space-y-3 mb-8">
         <CategoryFilter active={category} onChange={handleCategory} />
         <RegionSelector active={region} onChange={handleRegion} />
       </div>
@@ -81,19 +80,19 @@ export default function ArticleFeed({
           </p>
         </div>
       ) : (
-        <>
+        <div className="stagger-children">
           {hero && (
-            <div className="mb-8">
+            <div className="mb-6">
               <ArticleCard article={hero} featured />
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             {rest.map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}
           </div>
-        </>
+        </div>
       )}
     </>
   );
