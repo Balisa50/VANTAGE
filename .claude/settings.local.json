@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src=no --import-alias=\"@/*\" --use-npm)",
+      "Bash(rm coding.py learning.py)",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.virlo.com)",
+      "WebFetch(domain:dev.virlo.ai)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:virlo.ai)",
+      "Bash(node -e \":*)",
+      "Bash(source .env.local)",
+      "Bash(curl -s -X POST \"$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc\" -H \"apikey: $SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY\" -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/generate-articles -H \"x-api-secret: $CRON_SECRET\" -H \"Content-Type: application/json\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/api/generate-articles -H \"x-api-secret: test\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/generate-articles -H \"x-api-secret: $CRON_SECRET\")",
+      "Bash(vercel --version)",
+      "Bash(npx vercel:*)",
+      "Bash(echo \"$SUPABASE_SERVICE_ROLE_KEY\")",
+      "Bash(echo \"$VANTAGE_ANTHROPIC_KEY\")",
+      "Bash(echo \"$NEWS_API_KEY\")",
+      "Bash(echo \"$CRON_SECRET\")",
+      "Bash(printf 'https://intelligent-wing.vercel.app')"
+    ]
+  }
+}
