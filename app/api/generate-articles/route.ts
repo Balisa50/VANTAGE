@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
-import { fetchHNSignals, getHNAsHeadlines } from "../../lib/hackernews";
+import { fetchHNSignals, getHNAsHeadlines, formatHNContext } from "../../lib/hackernews";
+import { fetchVirloSignals, formatVirloContext } from "../../lib/virlo";
 
 export const maxDuration = 60;
 
@@ -32,25 +33,35 @@ async function handleGenerate(req: NextRequest) {
   const regionToRun = regionParam && REGIONS[regionParam] ? regionParam : "global";
 
   try {
-    // For global region, also pull HackerNews top stories as article candidates
-    let headlines = await fetchTopTechHeadlines(
-      regionToRun === "global" ? undefined : regionToRun
-    );
+    // Fetch all signal sources in parallel
+    const [newsHeadlines, hnSignals, virloSignals] = await Promise.all([
+      fetchTopTechHeadlines(regionToRun === "global" ? undefined : regionToRun),
+      regionToRun === "global" ? fetchHNSignals().catch(() => null) : Promise.resolve(null),
+      fetchVirloSignals().catch(() => null),
+    ]);
 
-    if (regionToRun === "global") {
-      try {
-        const hnSignals = await fetchHNSignals();
-        if (hnSignals) {
-          const hnHeadlines = getHNAsHeadlines(hnSignals);
-          headlines = [...hnHeadlines, ...headlines];
-        }
-      } catch {
-        // HN fetch failed, continue with news headlines only
-      }
+    let headlines = newsHeadlines;
+
+    // Merge HN top stories as article candidates for global
+    if (regionToRun === "global" && hnSignals) {
+      const hnHeadlines = getHNAsHeadlines(hnSignals);
+      headlines = [...hnHeadlines, ...headlines];
     }
 
-    const regionLabel = REGIONS[regionToRun]?.label ?? "Global";
+    // Build cross-signal context to enrich every article
+    const signalContext: string[] = [];
+    if (hnSignals) signalContext.push(formatHNContext(hnSignals));
+    if (virloSignals) signalContext.push(formatVirloContext(virloSignals));
+    const crossSignalBrief = signalContext.length > 0
+      ? `\n\nCROSS-SIGNAL INTELLIGENCE:\n${signalContext.join("\n\n")}`
+      : "";
 
+    // Determine which signal sources are active
+    const activeSources: string[] = ["News"];
+    if (hnSignals) activeSources.push("HackerNews");
+    if (virloSignals) activeSources.push("Virlo");
+
+    const regionLabel = REGIONS[regionToRun]?.label ?? "Global";
     const results: { slug: string; headline: string; status: string }[] = [];
     let created = 0;
 
@@ -77,9 +88,12 @@ async function handleGenerate(req: NextRequest) {
           userContent += `\n\nThis story comes from the ${regionLabel} tech ecosystem. Frame your analysis with awareness of this region's specific tech landscape, regulatory environment, and market dynamics.`;
         }
 
+        // Append cross-signal intelligence
+        userContent += crossSignalBrief;
+
         const message = await getAnthropicClient().messages.create({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 2048,
+          max_tokens: 3000,
           system: ARTICLE_SYSTEM_PROMPT,
           messages: [{ role: "user", content: userContent }],
         });
@@ -106,7 +120,7 @@ async function handleGenerate(req: NextRequest) {
           source_urls: [news.url],
           source_headlines: [news.title],
           signal_score: parseInt(article.signal_score) || 50,
-          signal_sources: ["News"],
+          signal_sources: activeSources,
           social_context: article.social_pulse ?? null,
         });
 
@@ -125,14 +139,13 @@ async function handleGenerate(req: NextRequest) {
       }
     }
 
-    // CHAIN: trigger the next region automatically (fire-and-forget)
+    // CHAIN: trigger the next region automatically
     const currentIdx = REGION_CHAIN.indexOf(regionToRun);
     const nextIdx = currentIdx + 1;
     if (nextIdx < REGION_CHAIN.length) {
       const nextRegion = REGION_CHAIN[nextIdx];
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://vantage-three-chi.vercel.app";
-      // Fire and forget — don't await, don't block response
       fetch(`${siteUrl}/api/generate-articles?region=${nextRegion}`, {
         method: "POST",
         headers: { "x-chain-secret": process.env.CRON_SECRET ?? "" },
@@ -143,6 +156,7 @@ async function handleGenerate(req: NextRequest) {
       region: regionToRun,
       created,
       skipped: results.filter((r) => r.status === "skipped").length,
+      signals: activeSources,
       nextRegion: nextIdx < REGION_CHAIN.length ? REGION_CHAIN[nextIdx] : null,
       results,
     });

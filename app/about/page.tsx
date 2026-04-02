@@ -1,13 +1,20 @@
 import Masthead from "../components/Masthead";
 import type { Metadata } from "next";
+import { supabase } from "../lib/supabase";
 
 export const metadata: Metadata = {
-  title: "About | Vantage",
+  title: "How It Works | Vantage",
   description:
-    "How Vantage works — an AI-native tri-signal tech intelligence platform.",
+    "How Vantage's fully automated AI editorial pipeline works — from signal ingestion to published analysis.",
 };
 
-export default function AboutPage() {
+export const revalidate = 300;
+
+export default async function AboutPage() {
+  const { count: totalArticles } = await supabase
+    .from("articles")
+    .select("*", { count: "exact", head: true });
+
   return (
     <div className="min-h-screen">
       <Masthead />
@@ -17,123 +24,133 @@ export default function AboutPage() {
           href="/"
           className="inline-flex items-center gap-2 text-sm font-mono text-text-secondary hover:text-accent-amber transition-colors mb-8"
         >
-          <span>&larr;</span> Back to all stories
+          <span>&larr;</span> Back to feed
         </a>
 
-        <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-8">
-          About Vantage
+        <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-3">
+          How Vantage Works
         </h2>
+        <p className="text-text-secondary text-sm font-mono mb-12">
+          Fully automated. No human in the editorial path.
+          {totalArticles ? ` ${totalArticles} articles published and counting.` : ""}
+        </p>
 
-        <div className="article-prose space-y-6">
-          <p>
-            Vantage is an AI-native tech intelligence platform. Every article is
-            produced by a tri-signal pipeline that cross-references traditional
-            news wires with real-time social signals from Reddit and HackerNews,
-            giving you not just what happened, but what builders, engineers, and
-            the wider tech community are actually paying attention to.
-          </p>
-
-          <p>No human editors. No agenda. No delay.</p>
-
-          <p>
-            Stories that trend across all three signal sources score highest.
-            Single-source stories score lower. The signal score tells you what
-            matters before the mainstream catches up.
-          </p>
+        {/* Pipeline visualization */}
+        <div className="space-y-0">
+          <PipelineStep
+            number="01"
+            title="Signal Ingestion"
+            description="Every cycle, the pipeline simultaneously queries four independent sources: NewsAPI wire services, Reddit community discussions, HackerNews builder conversations, and Virlo video trend data. Each source represents a different signal type with distinct editorial value."
+            detail="News wires capture institutional reporting. Reddit captures community sentiment. HackerNews captures builder perspective. Virlo captures cultural momentum from short-form video."
+          />
+          <PipelineStep
+            number="02"
+            title="Cross-Signal Analysis"
+            description="Raw signals are cross-referenced and deduplicated. Stories appearing across multiple sources receive higher signal scores. A story trending on HackerNews and Reddit simultaneously carries more editorial weight than a press release picked up by one wire service."
+            detail="Signal scores range 1-100. Tri-signal stories (3+ sources) always score highest. Single-source stories are included but ranked lower."
+          />
+          <PipelineStep
+            number="03"
+            title="AI Editorial Pipeline"
+            description="Each story is sent to Claude with full cross-signal context. The model produces structured analysis: what happened, why it matters, who wins and loses, what to watch next, and a social pulse synthesis. The editorial voice is opinionated and specific, not neutral wire copy."
+            detail="Output is structured JSON with headline, subheadline, category, four analytical sections, full prose body (700+ words), and a signal score. Every article is publication-ready with no human editing."
+          />
+          <PipelineStep
+            number="04"
+            title="Regional Distribution"
+            description="The pipeline runs across six regions: Global, Africa, Asia, Europe, Americas, and Middle East. Each region receives stories framed through its local tech ecosystem, regulatory landscape, and market dynamics. This is not US-centric tech news."
+            detail="Regions auto-chain: one trigger cascades through all six. Breaking news can also be generated on-demand via webhook."
+            last
+          />
         </div>
 
+        {/* Architecture */}
         <div className="mt-16 pt-8 border-t border-border">
           <h3 className="font-mono text-xs tracking-[0.2em] uppercase text-accent-amber mb-6">
-            Tri-Signal Methodology
+            Architecture
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-accent-amber tracking-wider uppercase">
-                Signal 1 — News
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                Top tech headlines from major wire services and publications. The
-                institutional signal: what traditional media is covering.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-purple-400 tracking-wider uppercase">
-                Signal 2 — Reddit
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                Trending discussions from r/technology, r/programming,
-                r/artificial, r/machinelearning, r/startups. The community
-                signal: what developers and users are actually saying.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-orange-400 tracking-wider uppercase">
-                Signal 3 — HackerNews
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                Top stories and Show HN posts. The builder signal: what
-                founders, engineers, and the startup ecosystem care about. Often
-                reveals technical depth mainstream coverage misses.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <ArchCard label="Frontend" value="Next.js with ISR" detail="Server-rendered, incrementally regenerated every 5 minutes" />
+            <ArchCard label="Database" value="Supabase (Postgres)" detail="Articles, subscribers, with row-level security" />
+            <ArchCard label="AI Engine" value="Claude Sonnet" detail="Structured analytical output with editorial voice" />
+            <ArchCard label="Signal Sources" value="4 independent APIs" detail="NewsAPI, Reddit, HackerNews, Virlo" />
+            <ArchCard label="Deployment" value="Vercel Edge" detail="Auto-deploy on push, daily cron + on-demand webhook" />
+            <ArchCard label="Content" value="Fully automated" detail="Zero human editorial intervention required" />
           </div>
         </div>
 
+        {/* Interactive features */}
         <div className="mt-12 pt-8 border-t border-border">
           <h3 className="font-mono text-xs tracking-[0.2em] uppercase text-accent-amber mb-6">
-            How It Works
+            Reader Features
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-text-secondary tracking-wider uppercase">
-                Analysis Engine
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                Claude cross-references all three signals and writes structured
-                analytical articles. Each article includes: what happened, why it
-                matters, who wins and loses, and what to watch next.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-text-secondary tracking-wider uppercase">
-                Ask Vantage
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                Every article includes an inline AI chat. Ask follow-up questions
-                and get sharp, analytical answers grounded in the
-                article&apos;s context.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-text-secondary tracking-wider uppercase">
-                Signal Scoring
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                Each story gets a 1-100 signal score based on how many sources
-                are covering it and the engagement it&apos;s generating.
-                Tri-signal stories (all three sources) always score highest.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-lg bg-surface border border-border">
-              <span className="text-xs font-mono text-text-secondary tracking-wider uppercase">
-                Global Coverage
-              </span>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                The pipeline covers 6 regions: Global, Africa, Asia, Europe,
-                Americas, and Middle East. Stories are generated continuously
-                with breaking news covered in real time via on-demand triggers.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <ArchCard label="Ask Vantage" value="Article-level AI chat" detail="Ask follow-up questions on any article, get analytical answers" />
+            <ArchCard label="Signal Scoring" value="1-100 per article" detail="Based on cross-source coverage and engagement signals" />
+            <ArchCard label="Global Filters" value="Category + Region" detail="Filter by AI, Startups, Policy, etc. across 6 regions" />
+            <ArchCard label="Search" value="Full-text, debounced" detail="Live search across all headlines and article bodies" />
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function PipelineStep({
+  number,
+  title,
+  description,
+  detail,
+  last = false,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  detail: string;
+  last?: boolean;
+}) {
+  return (
+    <div className="flex gap-4 sm:gap-6">
+      {/* Timeline */}
+      <div className="flex flex-col items-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-surface-elevated border border-accent-amber/20 flex items-center justify-center">
+          <span className="text-[10px] font-mono text-accent-amber">{number}</span>
+        </div>
+        {!last && <div className="w-px flex-1 bg-border my-1" />}
+      </div>
+
+      {/* Content */}
+      <div className={`pb-8 ${last ? "" : ""}`}>
+        <h4 className="font-mono text-sm text-text-primary mb-2">{title}</h4>
+        <p className="text-sm text-text-secondary leading-relaxed mb-2">
+          {description}
+        </p>
+        <p className="text-xs text-text-secondary/60 font-mono leading-relaxed">
+          {detail}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ArchCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="p-4 rounded-lg bg-surface border border-border">
+      <span className="text-[10px] font-mono text-text-secondary tracking-wider uppercase">
+        {label}
+      </span>
+      <p className="text-sm text-text-primary font-mono mt-1">{value}</p>
+      <p className="text-xs text-text-secondary mt-1">{detail}</p>
     </div>
   );
 }
