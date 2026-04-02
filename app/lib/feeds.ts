@@ -11,12 +11,16 @@ interface FeedSource {
 
 // Real tech publications from each region
 const REGIONAL_FEEDS: FeedSource[] = [
-  // AFRICA
+  // AFRICA — West, East, South, North
   { name: "TechCabal", url: "https://techcabal.com/feed/", region: "africa" },
   { name: "TechPoint Africa", url: "https://techpoint.africa/feed/", region: "africa" },
   { name: "Disrupt Africa", url: "https://disrupt-africa.com/feed/", region: "africa" },
   { name: "IT News Africa", url: "https://www.itnewsafrica.com/feed/", region: "africa" },
   { name: "Benjamindada", url: "https://benjamindada.com/feed", region: "africa" },
+  { name: "CIO East Africa", url: "https://www.cio.co.ke/feed/", region: "africa" },
+  { name: "Digest Africa", url: "https://digestafrica.com/feed", region: "africa" },
+  { name: "WeeTracker", url: "https://weetracker.com/feed/", region: "africa" },
+  { name: "Techeconomy", url: "https://techeconomy.ng/feed/", region: "africa" },
 
   // ASIA
   { name: "Tech in Asia", url: "https://www.techinasia.com/feed", region: "asia" },
