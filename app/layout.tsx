@@ -5,21 +5,21 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vantage-three-chi.v
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "VANTAGE — AI-Powered Tech Intelligence",
+  title: "VANTAGE — Tech Intelligence",
   description:
-    "AI-native tech intelligence platform with tri-signal analysis. Every story cross-referenced across news wires, Reddit, and HackerNews. Global regional coverage.",
+    "Sharp analysis on the tech stories that matter, published the moment they break. Global coverage. No editors. No agenda.",
   openGraph: {
-    title: "VANTAGE — AI-Powered Tech Intelligence",
+    title: "VANTAGE — Tech Intelligence",
     description:
-      "Tri-signal tech intelligence. News + Reddit + HackerNews, analyzed by AI.",
+      "Sharp analysis on the tech stories that matter. Global coverage across 6 regions.",
     type: "website",
     siteName: "Vantage",
   },
   twitter: {
     card: "summary_large_image",
-    title: "VANTAGE — AI-Powered Tech Intelligence",
+    title: "VANTAGE — Tech Intelligence",
     description:
-      "Tri-signal tech intelligence. News + Reddit + HackerNews, analyzed by AI.",
+      "Sharp analysis on the tech stories that matter. Global coverage across 6 regions.",
   },
   alternates: {
     types: {

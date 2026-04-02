@@ -3,7 +3,7 @@ import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
 import { fetchHNSignals, getHNAsHeadlines, formatHNContext } from "../../lib/hackernews";
-import { fetchVirloSignals, formatVirloContext } from "../../lib/virlo";
+import { fetchSocialSignals, formatSocialContext } from "../../lib/social";
 
 export const maxDuration = 60;
 
@@ -34,32 +34,30 @@ async function handleGenerate(req: NextRequest) {
 
   try {
     // Fetch all signal sources in parallel
-    const [newsHeadlines, hnSignals, virloSignals] = await Promise.all([
+    const [newsHeadlines, hnSignals, redditSignals] = await Promise.all([
       fetchTopTechHeadlines(regionToRun === "global" ? undefined : regionToRun),
       regionToRun === "global" ? fetchHNSignals().catch(() => null) : Promise.resolve(null),
-      fetchVirloSignals().catch(() => null),
+      fetchSocialSignals().catch(() => null),
     ]);
 
     let headlines = newsHeadlines;
 
-    // Merge HN top stories as article candidates for global
     if (regionToRun === "global" && hnSignals) {
       const hnHeadlines = getHNAsHeadlines(hnSignals);
       headlines = [...hnHeadlines, ...headlines];
     }
 
-    // Build cross-signal context to enrich every article
+    // Build cross-signal context
     const signalContext: string[] = [];
     if (hnSignals) signalContext.push(formatHNContext(hnSignals));
-    if (virloSignals) signalContext.push(formatVirloContext(virloSignals));
+    if (redditSignals) signalContext.push(formatSocialContext(redditSignals));
     const crossSignalBrief = signalContext.length > 0
-      ? `\n\nCROSS-SIGNAL INTELLIGENCE:\n${signalContext.join("\n\n")}`
+      ? `\n\nCROSS-SIGNAL INTELLIGENCE (use this to enrich your analysis):\n${signalContext.join("\n\n")}`
       : "";
 
-    // Determine which signal sources are active
     const activeSources: string[] = ["News"];
     if (hnSignals) activeSources.push("HackerNews");
-    if (virloSignals) activeSources.push("Virlo");
+    if (redditSignals) activeSources.push("Reddit");
 
     const regionLabel = REGIONS[regionToRun]?.label ?? "Global";
     const results: { slug: string; headline: string; status: string }[] = [];
@@ -82,18 +80,17 @@ async function handleGenerate(req: NextRequest) {
       }
 
       try {
-        let userContent = `Write an analytical article about this tech story:\n\nHeadline: ${news.title}\nDescription: ${news.description ?? "No description available."}\nSource: ${news.source.name}\nURL: ${news.url}\nRegion: ${regionLabel}`;
+        let userContent = `Write a deep analytical article about this tech story:\n\nHeadline: ${news.title}\nDescription: ${news.description ?? "No description available."}\nSource: ${news.source.name}\nURL: ${news.url}\nRegion: ${regionLabel}`;
 
         if (regionToRun !== "global") {
-          userContent += `\n\nThis story comes from the ${regionLabel} tech ecosystem. Frame your analysis with awareness of this region's specific tech landscape, regulatory environment, and market dynamics.`;
+          userContent += `\n\nThis story comes from the ${regionLabel} tech ecosystem. Frame your analysis through this region's specific context, power dynamics, and market realities.`;
         }
 
-        // Append cross-signal intelligence
         userContent += crossSignalBrief;
 
         const message = await getAnthropicClient().messages.create({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 3000,
+          max_tokens: 4000,
           system: ARTICLE_SYSTEM_PROMPT,
           messages: [{ role: "user", content: userContent }],
         });
@@ -105,6 +102,12 @@ async function handleGenerate(req: NextRequest) {
           .replace(/\n?```\s*$/, "")
           .trim();
         const article = JSON.parse(text);
+
+        // Skip non-tech stories that the model flagged
+        if (article.skip) {
+          results.push({ slug, headline: news.title, status: `skipped: ${article.reason}` });
+          continue;
+        }
 
         const { error } = await supabaseAdmin.from("articles").insert({
           slug,
@@ -139,7 +142,7 @@ async function handleGenerate(req: NextRequest) {
       }
     }
 
-    // CHAIN: trigger the next region automatically
+    // Chain next region
     const currentIdx = REGION_CHAIN.indexOf(regionToRun);
     const nextIdx = currentIdx + 1;
     if (nextIdx < REGION_CHAIN.length) {
@@ -157,7 +160,6 @@ async function handleGenerate(req: NextRequest) {
       created,
       skipped: results.filter((r) => r.status === "skipped").length,
       signals: activeSources,
-      nextRegion: nextIdx < REGION_CHAIN.length ? REGION_CHAIN[nextIdx] : null,
       results,
     });
   } catch (err) {
