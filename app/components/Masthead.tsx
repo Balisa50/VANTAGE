@@ -28,13 +28,6 @@ export default function Masthead() {
             >
               About
             </Link>
-            <span className="text-border">|</span>
-            <Link
-              href="/feed.xml"
-              className="text-xs font-mono text-text-secondary hover:text-accent-amber transition-colors tracking-wider uppercase"
-            >
-              RSS
-            </Link>
           </nav>
           <SearchBar />
         </div>
