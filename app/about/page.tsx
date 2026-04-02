@@ -1,20 +1,13 @@
 import Masthead from "../components/Masthead";
 import type { Metadata } from "next";
-import { supabase } from "../lib/supabase";
 
 export const metadata: Metadata = {
   title: "How It Works | Vantage",
   description:
-    "How Vantage's fully automated AI editorial pipeline works — from signal ingestion to published analysis.",
+    "How Vantage delivers tech intelligence — automated, opinionated, and global.",
 };
 
-export const revalidate = 300;
-
-export default async function AboutPage() {
-  const { count: totalArticles } = await supabase
-    .from("articles")
-    .select("*", { count: "exact", head: true });
-
+export default function AboutPage() {
   return (
     <div className="min-h-screen">
       <Masthead />
@@ -22,75 +15,84 @@ export default async function AboutPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <a
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-mono text-text-secondary hover:text-accent-amber transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-sm font-mono text-text-secondary hover:text-accent-amber transition-colors mb-10"
         >
-          <span>&larr;</span> Back to feed
+          <span>&larr;</span> Back
         </a>
 
-        <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-3">
-          How Vantage Works
+        <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-4">
+          Intelligence, not information.
         </h2>
-        <p className="text-text-secondary text-sm font-mono mb-12">
-          Fully automated. No human in the editorial path.
-          {totalArticles ? ` ${totalArticles} articles published and counting.` : ""}
+        <p className="text-text-secondary text-base leading-relaxed mb-12 max-w-2xl">
+          Most tech news tells you what happened. Vantage tells you what it means, who it affects, and what comes next. Every story is analyzed the moment it breaks, with the depth you&apos;d expect from the world&apos;s best newsrooms.
         </p>
 
-        {/* Pipeline visualization */}
-        <div className="space-y-0">
+        {/* How it works */}
+        <div className="space-y-0 mb-16">
           <PipelineStep
             number="01"
-            title="Signal Ingestion"
-            description="Every cycle, the pipeline simultaneously queries four independent sources: NewsAPI wire services, Reddit community discussions, HackerNews builder conversations, and Virlo video trend data. Each source represents a different signal type with distinct editorial value."
-            detail="News wires capture institutional reporting. Reddit captures community sentiment. HackerNews captures builder perspective. Virlo captures cultural momentum from short-form video."
+            title="Vantage monitors the global conversation"
+            description="Every few hours, Vantage scans thousands of sources across the tech world: wire services, developer communities, builder forums, and social platforms. Not just what journalists are writing, but what engineers, founders, and the broader tech community are actually talking about."
           />
           <PipelineStep
             number="02"
-            title="Cross-Signal Analysis"
-            description="Raw signals are cross-referenced and deduplicated. Stories appearing across multiple sources receive higher signal scores. A story trending on HackerNews and Reddit simultaneously carries more editorial weight than a press release picked up by one wire service."
-            detail="Signal scores range 1-100. Tri-signal stories (3+ sources) always score highest. Single-source stories are included but ranked lower."
+            title="Stories are ranked by real-world signal"
+            description="Not all stories are equal. Vantage weighs each story based on how many independent sources are discussing it and how much engagement it's generating. A story buzzing across multiple communities carries more weight than a single press release. That's the signal score you see on every article."
           />
           <PipelineStep
             number="03"
-            title="AI Editorial Pipeline"
-            description="Each story is sent to Claude with full cross-signal context. The model produces structured analysis: what happened, why it matters, who wins and loses, what to watch next, and a social pulse synthesis. The editorial voice is opinionated and specific, not neutral wire copy."
-            detail="Output is structured JSON with headline, subheadline, category, four analytical sections, full prose body (700+ words), and a signal score. Every article is publication-ready with no human editing."
+            title="Every article is a proper analysis"
+            description="Vantage doesn't rewrite headlines. Each story gets a full editorial treatment: what happened, why it matters, who wins and loses, and what to watch next. The voice is opinionated and specific. If something is a strategic mistake, Vantage says so. If it changes everything, Vantage explains why."
           />
           <PipelineStep
             number="04"
-            title="Regional Distribution"
-            description="The pipeline runs across six regions: Global, Africa, Asia, Europe, Americas, and Middle East. Each region receives stories framed through its local tech ecosystem, regulatory landscape, and market dynamics. This is not US-centric tech news."
-            detail="Regions auto-chain: one trigger cascades through all six. Breaking news can also be generated on-demand via webhook."
+            title="Global, not American"
+            description="Tech doesn't stop at Silicon Valley. Vantage covers six regions: Global, Africa, Asia, Europe, the Americas, and the Middle East. Each story is framed through the lens that matters most, whether that's Nairobi's fintech boom, Seoul's semiconductor wars, or Brussels' regulatory machine."
             last
           />
         </div>
 
-        {/* Architecture */}
-        <div className="mt-16 pt-8 border-t border-border">
-          <h3 className="font-mono text-xs tracking-[0.2em] uppercase text-accent-amber mb-6">
-            Architecture
+        {/* What you can do */}
+        <div className="border-t border-border pt-12">
+          <h3 className="font-serif text-2xl text-text-primary mb-8">
+            What you can do on Vantage
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ArchCard label="Frontend" value="Next.js with ISR" detail="Server-rendered, incrementally regenerated every 5 minutes" />
-            <ArchCard label="Database" value="Supabase (Postgres)" detail="Articles, subscribers, with row-level security" />
-            <ArchCard label="AI Engine" value="Claude Sonnet" detail="Structured analytical output with editorial voice" />
-            <ArchCard label="Signal Sources" value="4 independent APIs" detail="NewsAPI, Reddit, HackerNews, Virlo" />
-            <ArchCard label="Deployment" value="Vercel Edge" detail="Auto-deploy on push, daily cron + on-demand webhook" />
-            <ArchCard label="Content" value="Fully automated" detail="Zero human editorial intervention required" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <FeatureCard
+              title="Ask questions on any story"
+              description="Every article has a built-in conversation layer. Ask a follow-up, challenge the analysis, or go deeper on any angle. Vantage responds with the same analytical depth as the article itself."
+            />
+            <FeatureCard
+              title="Filter by what matters to you"
+              description="Focus on AI, startups, policy, infrastructure, or markets. Narrow by region. See only the stories relevant to your world."
+            />
+            <FeatureCard
+              title="Read the signal, skip the noise"
+              description="The signal score on every article tells you how much attention a story is getting across the tech world. High scores mean multiple communities are paying attention. Low scores mean it might not be worth your time."
+            />
+            <FeatureCard
+              title="Search across everything"
+              description="Looking for something specific? Search instantly across every headline and article body. Results appear as you type."
+            />
           </div>
         </div>
 
-        {/* Interactive features */}
-        <div className="mt-12 pt-8 border-t border-border">
-          <h3 className="font-mono text-xs tracking-[0.2em] uppercase text-accent-amber mb-6">
-            Reader Features
+        {/* Philosophy */}
+        <div className="border-t border-border pt-12 mt-12">
+          <h3 className="font-serif text-2xl text-text-primary mb-4">
+            Why this exists
           </h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ArchCard label="Ask Vantage" value="Article-level AI chat" detail="Ask follow-up questions on any article, get analytical answers" />
-            <ArchCard label="Signal Scoring" value="1-100 per article" detail="Based on cross-source coverage and engagement signals" />
-            <ArchCard label="Global Filters" value="Category + Region" detail="Filter by AI, Startups, Policy, etc. across 6 regions" />
-            <ArchCard label="Search" value="Full-text, debounced" detail="Live search across all headlines and article bodies" />
+          <div className="article-prose">
+            <p className="text-text-secondary">
+              The tech news ecosystem is broken. Wire services optimize for speed, not depth. Opinion pieces optimize for engagement, not accuracy. And almost all of it is written for an American audience, ignoring the fact that the most interesting tech stories are increasingly coming from Lagos, Bangalore, and Riyadh.
+            </p>
+            <p className="text-text-secondary">
+              Vantage is built on a simple premise: the best intelligence comes from cross-referencing multiple sources, not relying on any single one. When traditional media, developer communities, and builder forums all converge on the same story, that story matters. When they diverge, that divergence is the story.
+            </p>
+            <p className="text-text-secondary">
+              No editors. No sponsors. No agenda. Just signal.
+            </p>
           </div>
         </div>
       </main>
@@ -102,55 +104,44 @@ function PipelineStep({
   number,
   title,
   description,
-  detail,
   last = false,
 }: {
   number: string;
   title: string;
   description: string;
-  detail: string;
   last?: boolean;
 }) {
   return (
     <div className="flex gap-4 sm:gap-6">
-      {/* Timeline */}
       <div className="flex flex-col items-center flex-shrink-0">
         <div className="w-8 h-8 rounded-full bg-surface-elevated border border-accent-amber/20 flex items-center justify-center">
           <span className="text-[10px] font-mono text-accent-amber">{number}</span>
         </div>
         {!last && <div className="w-px flex-1 bg-border my-1" />}
       </div>
-
-      {/* Content */}
-      <div className={`pb-8 ${last ? "" : ""}`}>
-        <h4 className="font-mono text-sm text-text-primary mb-2">{title}</h4>
-        <p className="text-sm text-text-secondary leading-relaxed mb-2">
+      <div className="pb-8">
+        <h4 className="font-serif text-lg text-text-primary mb-2">{title}</h4>
+        <p className="text-sm text-text-secondary leading-relaxed">
           {description}
-        </p>
-        <p className="text-xs text-text-secondary/60 font-mono leading-relaxed">
-          {detail}
         </p>
       </div>
     </div>
   );
 }
 
-function ArchCard({
-  label,
-  value,
-  detail,
+function FeatureCard({
+  title,
+  description,
 }: {
-  label: string;
-  value: string;
-  detail: string;
+  title: string;
+  description: string;
 }) {
   return (
-    <div className="p-4 rounded-lg bg-surface border border-border">
-      <span className="text-[10px] font-mono text-text-secondary tracking-wider uppercase">
-        {label}
-      </span>
-      <p className="text-sm text-text-primary font-mono mt-1">{value}</p>
-      <p className="text-xs text-text-secondary mt-1">{detail}</p>
+    <div className="p-5 rounded-lg bg-surface border border-border">
+      <h4 className="text-sm font-serif text-text-primary mb-2">{title}</h4>
+      <p className="text-sm text-text-secondary leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
