@@ -131,7 +131,7 @@ async function handleGenerate(req: NextRequest) {
     if (nextIdx < REGION_CHAIN.length) {
       const nextRegion = REGION_CHAIN[nextIdx];
       const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ?? "https://intelligent-wing.vercel.app";
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://vantage-three-chi.vercel.app";
       // Fire and forget — don't await, don't block response
       fetch(`${siteUrl}/api/generate-articles?region=${nextRegion}`, {
         method: "POST",
