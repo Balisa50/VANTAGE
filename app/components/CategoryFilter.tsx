@@ -1,13 +1,13 @@
 "use client";
 
 const CATEGORIES = [
-  { key: "All", color: "text-accent-amber" },
-  { key: "AI", color: "text-amber-400" },
-  { key: "Big Tech", color: "text-purple-400" },
-  { key: "Startups", color: "text-emerald-400" },
-  { key: "Policy", color: "text-red-400" },
-  { key: "Markets", color: "text-cyan-400" },
-  { key: "Infrastructure", color: "text-blue-400" },
+  "All",
+  "AI",
+  "Big Tech",
+  "Startups",
+  "Policy",
+  "Markets",
+  "Infrastructure",
 ];
 
 export default function CategoryFilter({
@@ -21,15 +21,15 @@ export default function CategoryFilter({
     <div className="flex flex-wrap gap-2 justify-center">
       {CATEGORIES.map((cat) => (
         <button
-          key={cat.key}
-          onClick={() => onChange(cat.key)}
+          key={cat}
+          onClick={() => onChange(cat)}
           className={`px-3 py-1.5 sm:px-4 rounded-full text-xs sm:text-sm font-mono transition-all duration-200 ${
-            active === cat.key
-              ? `bg-surface-elevated ${cat.color} border border-current/20 shadow-sm`
-              : "text-text-secondary border border-border hover:border-border-glow hover:text-text-primary"
+            active === cat
+              ? "bg-accent-amber/10 text-accent-amber border border-accent-amber/20"
+              : "text-text-secondary border border-border hover:text-text-primary hover:border-border-glow"
           }`}
         >
-          {cat.key}
+          {cat}
         </button>
       ))}
     </div>

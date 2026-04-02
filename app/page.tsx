@@ -43,9 +43,6 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      {/* Subtle noise texture */}
-      <div className="noise-overlay" />
-
       <KeyboardShortcuts />
       <Masthead />
 
