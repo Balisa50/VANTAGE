@@ -5,7 +5,7 @@ import { supabase, type Article } from "../lib/supabase";
 export const revalidate = 120;
 
 export default async function TrendingPage() {
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const since24h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
   const { data } = await supabase
     .from("articles")
