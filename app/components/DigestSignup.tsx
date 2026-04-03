@@ -37,7 +37,7 @@ export default function DigestSignup() {
         <div className="relative text-center py-10 px-4">
           <span className="inline-flex items-center gap-2 text-sm font-mono text-accent-amber">
             <span className="w-2 h-2 rounded-full bg-accent-green" />
-            You&apos;re on the list. We&apos;ll be in touch.
+            You&apos;re in.
           </span>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function DigestSignup() {
           Intelligence Brief
         </h3>
         <p className="text-sm text-text-secondary mb-5">
-          Get notified when we launch daily briefings.
+          The stories that matter. Delivered.
         </p>
         <form
           onSubmit={handleSubmit}
@@ -71,7 +71,7 @@ export default function DigestSignup() {
             disabled={status === "loading"}
             className="w-full sm:w-auto px-6 py-2.5 bg-accent-amber text-background text-sm font-mono font-medium rounded-lg hover:bg-accent-amber/90 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all disabled:opacity-50 whitespace-nowrap"
           >
-            {status === "loading" ? "..." : "Notify Me"}
+            {status === "loading" ? "..." : "Subscribe"}
           </button>
         </form>
         {status === "error" && (
