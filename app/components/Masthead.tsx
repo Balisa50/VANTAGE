@@ -3,7 +3,7 @@ import SearchBar from "./SearchBar";
 
 export default function Masthead() {
   return (
-    <header className="relative border-b border-border overflow-hidden">
+    <header className="relative border-b border-border overflow-hidden" style={{ zIndex: 50 }}>
       <div className="absolute inset-0 hero-glow pointer-events-none" />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
@@ -28,6 +28,24 @@ export default function Masthead() {
 
         <div className="mt-5 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
           <nav className="flex items-center gap-3 sm:gap-4">
+            <Link
+              href="/briefing"
+              className="text-xs font-mono text-text-secondary hover:text-accent-amber transition-colors tracking-wider uppercase"
+            >
+              Briefing
+            </Link>
+            <Link
+              href="/trending"
+              className="text-xs font-mono text-text-secondary hover:text-accent-amber transition-colors tracking-wider uppercase"
+            >
+              Trending
+            </Link>
+            <Link
+              href="/saved"
+              className="text-xs font-mono text-text-secondary hover:text-accent-amber transition-colors tracking-wider uppercase"
+            >
+              Saved
+            </Link>
             <Link
               href="/about"
               className="text-xs font-mono text-text-secondary hover:text-accent-amber transition-colors tracking-wider uppercase"

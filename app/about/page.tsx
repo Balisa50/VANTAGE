@@ -32,7 +32,7 @@ export default function AboutPage() {
           <PipelineStep
             number="01"
             title="Vantage monitors the global conversation"
-            description="Every few hours, Vantage scans thousands of sources across the tech world: wire services, developer communities, builder forums, and social platforms. Not just what journalists are writing, but what engineers, founders, and the broader tech community are actually talking about."
+            description="Every two hours, Vantage scans thousands of sources across the tech world: wire services, developer communities, builder forums, and regional publications. Not just what journalists are writing, but what engineers, founders, and the broader tech community are actually talking about."
           />
           <PipelineStep
             number="02"
@@ -46,8 +46,8 @@ export default function AboutPage() {
           />
           <PipelineStep
             number="04"
-            title="Global, not American"
-            description="Tech doesn't stop at Silicon Valley. Vantage covers six regions: Global, Africa, Asia, Europe, the Americas, and the Middle East. Each story is framed through the lens that matters most, whether that's Nairobi's fintech boom, Seoul's semiconductor wars, or Brussels' regulatory machine."
+            title="Built for the whole world"
+            description="The best tech stories are increasingly coming from every corner of the globe. Vantage covers six regions: Global, Africa, Asia, Europe, the Americas, and the Middle East. Each story is framed through the lens that matters most, whether that's Nairobi's fintech boom, Seoul's semiconductor wars, or Brussels' regulatory machine. Every reader, everywhere, gets the same depth."
             last
           />
         </div>
@@ -64,16 +64,16 @@ export default function AboutPage() {
               description="Every article has a built-in conversation layer. Ask a follow-up, challenge the analysis, or go deeper on any angle. Vantage responds with the same analytical depth as the article itself."
             />
             <FeatureCard
-              title="Filter by what matters to you"
-              description="Focus on AI, startups, policy, infrastructure, or markets. Narrow by region. See only the stories relevant to your world."
+              title="Search — and always find"
+              description="Looking for something specific? Search instantly across every article. If we don't have it, Vantage generates a full analysis on the spot. You will never hit a dead end."
             />
             <FeatureCard
-              title="Read the signal, skip the noise"
-              description="The signal score on every article tells you how much attention a story is getting across the tech world. High scores mean multiple communities are paying attention. Low scores mean it might not be worth your time."
+              title="Your daily briefing"
+              description="Every morning, the Briefing page gives you the most important stories ranked by signal strength. Your morning in 2 minutes, with global context."
             />
             <FeatureCard
-              title="Search across everything"
-              description="Looking for something specific? Search instantly across every headline and article body. Results appear as you type."
+              title="Save what matters"
+              description="Bookmark articles to come back to later. Your saved stories are always one tap away, no account needed."
             />
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function AboutPage() {
           </h3>
           <div className="article-prose">
             <p className="text-text-secondary">
-              The tech news ecosystem is broken. Wire services optimize for speed, not depth. Opinion pieces optimize for engagement, not accuracy. And almost all of it is written for an American audience, ignoring the fact that the most interesting tech stories are increasingly coming from Lagos, Bangalore, and Riyadh.
+              The tech news ecosystem is broken. Wire services optimize for speed, not depth. Opinion pieces optimize for engagement, not accuracy. And most of it is written for a single market, ignoring the fact that the most interesting tech stories are increasingly coming from Lagos, Bangalore, and Riyadh.
             </p>
             <p className="text-text-secondary">
               Vantage is built on a simple premise: the best intelligence comes from cross-referencing multiple sources, not relying on any single one. When traditional media, developer communities, and builder forums all converge on the same story, that story matters. When they diverge, that divergence is the story.

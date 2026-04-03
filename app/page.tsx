@@ -4,20 +4,25 @@ import DigestSignup from "./components/DigestSignup";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
 import { supabase, type Article } from "./lib/supabase";
 
-export const revalidate = 300;
+export const revalidate = 120;
 
 export default async function HomePage() {
+  // Only show articles from last 24 hours — always fresh
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
   const { data } = await supabase
     .from("articles")
     .select("*")
+    .gte("published_at", cutoff)
     .order("published_at", { ascending: false })
-    .limit(20);
+    .limit(30);
 
   const articles = (data as Article[]) ?? [];
 
   const { count } = await supabase
     .from("articles")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .gte("published_at", cutoff);
 
   const totalCount = count ?? 0;
   const lastUpdated = articles.length > 0 ? articles[0].published_at : null;
