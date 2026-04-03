@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
+import { getAnthropicClient } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
-// HN disabled in pipeline to stay within 60s timeout
 import { fetchRegionalHeadlines } from "../../lib/feeds";
 
 export const maxDuration = 60;
 
 const REGION_CHAIN = ["global", "africa", "asia", "europe", "americas", "middleeast"];
+
+// Lean prompt for pipeline speed — keeps quality high but fits in 60s
+const PIPELINE_PROMPT = `You are the editorial engine behind Vantage, the world's sharpest tech publication. Write like Ben Thompson meets Matt Levine meets The Economist. Take positions. Follow the money. Name names and numbers. Be specific.
+
+If NOT a tech/business/policy story: {"skip": true, "reason": "Not a tech story"}
+
+Return ONLY raw JSON:
+{
+  "headline": "A verdict, not a description. Must contain a thesis.",
+  "subheadline": "One sharp sentence deepening the headline.",
+  "category": "One of: AI, Infrastructure, Startups, Big Tech, Policy, Markets",
+  "what_happened": "2-3 paragraphs. Specific names, numbers, dates.",
+  "why_it_matters": "3-4 paragraphs. Take a position. Second-order effects. Connect to larger narrative.",
+  "who_wins_loses": "2-3 paragraphs. Name specific companies, people, countries.",
+  "what_to_watch": "1-2 paragraphs. Specific dates, deadlines, predictions.",
+  "social_pulse": "1 paragraph or 'No significant community signal detected.'",
+  "full_body": "Complete article, minimum 800 words. Publication-ready prose. Hook opening. Strong argument. Every paragraph earns the next.",
+  "signal_score": "Integer 1-100. Be honest."
+}`;
 
 export async function GET(req: NextRequest) {
   return handleGenerate(req);
@@ -35,10 +53,8 @@ async function handleGenerate(req: NextRequest) {
     let headlines;
 
     if (regionToRun === "global") {
-      // Global: NewsAPI handles this (fast, no RSS overhead)
       headlines = await fetchTopTechHeadlines().catch(() => []);
     } else {
-      // Regional: REAL regional publications via RSS
       const rssHeadlines = await fetchRegionalHeadlines(regionToRun).catch(() => []);
       headlines = rssHeadlines.length > 0
         ? rssHeadlines
@@ -46,7 +62,6 @@ async function handleGenerate(req: NextRequest) {
     }
 
     const activeSources: string[] = ["News"];
-
     const regionLabel = REGIONS[regionToRun]?.label ?? "Global";
     const results: { slug: string; headline: string; status: string }[] = [];
     let created = 0;
@@ -68,16 +83,16 @@ async function handleGenerate(req: NextRequest) {
       }
 
       try {
-        let userContent = `Write a deep analytical article about this tech story:\n\nHeadline: ${news.title}\nDescription: ${news.description ?? "No description available."}\nSource: ${news.source.name}\nURL: ${news.url}\nRegion: ${regionLabel}`;
+        let userContent = `Headline: ${news.title}\nDescription: ${news.description ?? "No description."}\nSource: ${news.source.name}\nRegion: ${regionLabel}`;
 
         if (regionToRun !== "global") {
-          userContent += `\n\nIMPORTANT: This story is from ${news.source.name}, a ${regionLabel} publication. Write your analysis from within this region's perspective. Don't treat it as an outsider looking in. Understand the local market dynamics, the key players in this region, and why this story matters to people living and building here.`;
+          userContent += `\n\nWrite from inside ${regionLabel}. Local perspective, local dynamics.`;
         }
 
         const message = await getAnthropicClient().messages.create({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 3000,
-          system: ARTICLE_SYSTEM_PROMPT,
+          max_tokens: 2500,
+          system: PIPELINE_PROMPT,
           messages: [{ role: "user", content: userContent }],
         });
 
@@ -143,8 +158,6 @@ async function handleGenerate(req: NextRequest) {
     return NextResponse.json({
       region: regionToRun,
       created,
-      skipped: results.filter((r) => r.status === "skipped").length,
-      signals: activeSources,
       results,
     });
   } catch (err) {
