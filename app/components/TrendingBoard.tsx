@@ -7,9 +7,9 @@ import BookmarkButton from "./BookmarkButton";
 import type { Article } from "../lib/supabase";
 
 const TIME_FILTERS = [
-  { key: "6h", label: "Last 6h", ms: 6 * 60 * 60 * 1000 },
-  { key: "12h", label: "Last 12h", ms: 12 * 60 * 60 * 1000 },
-  { key: "24h", label: "Last 24h", ms: 24 * 60 * 60 * 1000 },
+  { key: "6h", label: "6h", ms: 6 * 60 * 60 * 1000 },
+  { key: "12h", label: "12h", ms: 12 * 60 * 60 * 1000 },
+  { key: "24h", label: "24h", ms: 24 * 60 * 60 * 1000 },
 ] as const;
 
 const REGION_LABELS: Record<string, string> = {
@@ -42,16 +42,8 @@ export default function TrendingBoard({
     (a) => new Date(a.published_at).getTime() >= cutoff
   );
 
-  // Category breakdown
-  const categoryCounts: Record<string, number> = {};
-  for (const a of filtered) {
-    const c = a.category || "Other";
-    categoryCounts[c] = (categoryCounts[c] || 0) + 1;
-  }
-
   return (
     <>
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
           <span className="w-1.5 h-1.5 rounded-full bg-accent-red pulse-dot" />
@@ -59,15 +51,11 @@ export default function TrendingBoard({
             Trending
           </span>
         </div>
-        <h1 className="font-serif text-3xl md:text-4xl text-text-primary mb-2">
+        <h1 className="font-serif text-3xl md:text-4xl text-text-primary">
           Signal Board
         </h1>
-        <p className="text-sm text-text-secondary">
-          Stories ranked by signal strength. Higher score = more sources converging.
-        </p>
       </div>
 
-      {/* Time filter */}
       <div className="flex items-center gap-2 mb-6">
         {TIME_FILTERS.map((f) => (
           <button
@@ -82,35 +70,12 @@ export default function TrendingBoard({
             {f.label}
           </button>
         ))}
-        <span className="text-xs font-mono text-text-secondary ml-2">
-          {filtered.length} stories
-        </span>
       </div>
 
-      {/* Category Activity */}
-      {Object.keys(categoryCounts).length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-8">
-          {Object.entries(categoryCounts)
-            .sort((a, b) => b[1] - a[1])
-            .map(([cat, count]) => (
-              <span
-                key={cat}
-                className="text-[11px] font-mono px-2.5 py-1 rounded-full border border-border bg-surface text-text-secondary"
-              >
-                {cat} <span className="text-accent-amber">{count}</span>
-              </span>
-            ))}
-        </div>
-      )}
-
-      {/* Rankings */}
       {filtered.length === 0 ? (
         <div className="text-center py-20 border border-border rounded-lg bg-surface">
           <p className="text-text-secondary font-serif text-lg italic">
-            No stories in this time window.
-          </p>
-          <p className="mt-2 text-text-secondary font-mono text-sm">
-            Try expanding the time filter.
+            No stories in this window yet.
           </p>
         </div>
       ) : (
@@ -121,7 +86,6 @@ export default function TrendingBoard({
                 href={`/article/${article.slug}`}
                 className="flex items-start gap-4 p-4 rounded-lg border border-border bg-surface hover:border-accent-amber/15 transition-all"
               >
-                {/* Rank */}
                 <div className="flex-shrink-0 w-8 text-center">
                   <span
                     className={`text-lg font-mono font-semibold ${
@@ -132,26 +96,6 @@ export default function TrendingBoard({
                   </span>
                 </div>
 
-                {/* Signal bar */}
-                <div className="flex-shrink-0 w-16 pt-2">
-                  <div className="w-full h-2 rounded-full bg-border overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        article.signal_score >= 75
-                          ? "bg-accent-amber"
-                          : article.signal_score >= 50
-                            ? "bg-accent-amber/60"
-                            : "bg-text-secondary/40"
-                      }`}
-                      style={{ width: `${article.signal_score}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-mono text-text-secondary mt-0.5 block">
-                    {article.signal_score}
-                  </span>
-                </div>
-
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {isHeatingUp(article) && (
