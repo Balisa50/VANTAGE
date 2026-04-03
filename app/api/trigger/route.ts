@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const maxDuration = 10;
+export const runtime = "edge";
 
 // External cron services (cron-job.org etc) hit this endpoint
 // It triggers the full pipeline by firing and forgetting

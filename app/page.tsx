@@ -43,8 +43,14 @@ export default async function HomePage() {
       <DigestSignup />
 
       <footer className="border-t border-border mt-auto bg-surface/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 text-center">
-          <p className="text-[10px] sm:text-xs text-text-secondary/50 font-mono">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-green pulse-dot" />
+            <span className="text-[10px] text-text-secondary/40 font-mono">
+              Scanning 25+ sources across 6 continents
+            </span>
+          </div>
+          <p className="text-[10px] text-text-secondary/40 font-mono">
             &copy; {new Date().getFullYear()} Vantage
           </p>
         </div>

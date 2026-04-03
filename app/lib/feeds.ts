@@ -118,7 +118,7 @@ function cleanHtml(text: string): string {
 async function fetchFeed(source: FeedSource): Promise<NewsArticle[]> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 2500);
 
     const res = await fetch(source.url, {
       signal: controller.signal,

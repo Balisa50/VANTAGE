@@ -41,11 +41,15 @@ export default function ArticleFeed({
         <SkeletonFeed />
       ) : articles.length === 0 ? (
         <div className="text-center py-24">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="w-2 h-2 rounded-full bg-accent-green pulse-dot" />
+            <span className="text-xs font-mono text-accent-green uppercase tracking-widest">Scanning</span>
+          </div>
           <p className="text-text-secondary font-serif text-xl italic">
             Intelligence is being gathered.
           </p>
-          <p className="mt-2 text-text-secondary font-mono text-sm">
-            Fresh analysis drops every 2 hours.
+          <p className="mt-2 text-text-secondary/50 font-mono text-xs">
+            Check back shortly.
           </p>
         </div>
       ) : (
