@@ -22,8 +22,8 @@ export default function Masthead() {
           </p>
         </div>
 
-        <p className="text-xs sm:text-sm text-text-secondary font-sans tracking-wide max-w-md mx-auto leading-relaxed text-center">
-          Tech intelligence that cuts through the noise. Sharp analysis on the stories that matter, published the moment they break.
+        <p className="text-xs sm:text-sm text-text-secondary font-sans tracking-wide max-w-lg mx-auto leading-relaxed text-center">
+          The sharpest lens on global tech. AI-powered analysis from six continents, published the moment stories break.
         </p>
 
         <div className="mt-5 flex items-center justify-center gap-4 sm:gap-6 flex-wrap">

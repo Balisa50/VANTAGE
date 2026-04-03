@@ -1,9 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
-import { supabaseAdmin } from "../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+import { ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { slugify } from "../../lib/newsapi";
 
-export const maxDuration = 60;
+export const runtime = "edge";
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(url, key);
+}
+
+async function callClaude(systemPrompt: string, userContent: string): Promise<string> {
+  const apiKey = process.env.VANTAGE_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 3000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userContent }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Anthropic API error: ${res.status} ${err}`);
+  }
+
+  const data = await res.json();
+  return data.content?.[0]?.type === "text" ? data.content[0].text : "";
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,9 +47,10 @@ export async function POST(req: NextRequest) {
     }
 
     const searchTerm = query.trim();
+    const db = getSupabaseAdmin();
 
     // First: try one more search in case we missed something
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await db
       .from("articles")
       .select("*")
       .or(
@@ -29,30 +64,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate an analysis on the spot
-    const message = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
-      system: ARTICLE_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `The user is searching for: "${searchTerm}"
+    const text = await callClaude(
+      ARTICLE_SYSTEM_PROMPT,
+      `The user is searching for: "${searchTerm}"
 
 Write a deep analytical article about this topic. Research this from your knowledge — what are the latest developments, the key players, the strategic implications? Write as if this just broke today.
 
-If this is clearly not a tech/policy/markets story, still analyze it through a technology or strategic lens. Find the tech angle. There is always one.`,
-        },
-      ],
-    });
+If this is clearly not a tech/policy/markets story, still analyze it through a technology or strategic lens. Find the tech angle. There is always one.`
+    );
 
-    let text =
-      message.content[0].type === "text" ? message.content[0].text : "";
-    text = text
+    const cleaned = text
       .replace(/^```(?:json)?\s*\n?/i, "")
       .replace(/\n?```\s*$/, "")
       .trim();
 
-    const article = JSON.parse(text);
+    const article = JSON.parse(cleaned);
 
     if (article.skip) {
       return NextResponse.json(
@@ -63,7 +89,7 @@ If this is clearly not a tech/policy/markets story, still analyze it through a t
 
     const slug = slugify(article.headline);
 
-    const { data: inserted, error } = await supabaseAdmin
+    const { data: inserted, error } = await db
       .from("articles")
       .insert({
         slug,

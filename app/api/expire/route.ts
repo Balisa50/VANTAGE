@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "../../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+export const runtime = "edge";
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(url, key);
+}
 
 // Delete articles older than 24 hours — keeps content fresh
 export async function POST(req: NextRequest) {
@@ -14,7 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const { data: expired } = await supabaseAdmin
+    const { data: expired } = await getSupabaseAdmin()
       .from("articles")
       .select("id")
       .lt("published_at", cutoff);
@@ -22,7 +30,7 @@ export async function POST(req: NextRequest) {
     const count = expired?.length ?? 0;
 
     if (count > 0) {
-      const { error } = await supabaseAdmin
+      const { error } = await getSupabaseAdmin()
         .from("articles")
         .delete()
         .lt("published_at", cutoff);
