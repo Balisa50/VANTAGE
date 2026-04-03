@@ -11,7 +11,7 @@ interface FeedSource {
 
 // Real tech publications from each region
 const REGIONAL_FEEDS: FeedSource[] = [
-  // AFRICA — West, East, South, North
+  // AFRICA — West, East, South, North, Pan-Africa
   { name: "TechCabal", url: "https://techcabal.com/feed/", region: "africa" },
   { name: "TechPoint Africa", url: "https://techpoint.africa/feed/", region: "africa" },
   { name: "Disrupt Africa", url: "https://disrupt-africa.com/feed/", region: "africa" },
@@ -21,6 +21,8 @@ const REGIONAL_FEEDS: FeedSource[] = [
   { name: "Digest Africa", url: "https://digestafrica.com/feed", region: "africa" },
   { name: "WeeTracker", url: "https://weetracker.com/feed/", region: "africa" },
   { name: "Techeconomy", url: "https://techeconomy.ng/feed/", region: "africa" },
+  { name: "Ventures Africa", url: "https://venturesafrica.com/feed/", region: "africa" },
+  { name: "MyBroadband", url: "https://mybroadband.co.za/news/feed", region: "africa" },
 
   // ASIA
   { name: "Tech in Asia", url: "https://www.techinasia.com/feed", region: "asia" },
@@ -43,10 +45,7 @@ const REGIONAL_FEEDS: FeedSource[] = [
   { name: "LABS by Contxto", url: "https://labsnews.com/en/feed/", region: "americas" },
   { name: "BetaKit", url: "https://betakit.com/feed/", region: "americas" },
 
-  // GLOBAL (quality international tech press)
-  { name: "Ars Technica", url: "https://feeds.arstechnica.com/arstechnica/index", region: "global" },
-  { name: "TechCrunch", url: "https://techcrunch.com/feed/", region: "global" },
-  { name: "The Verge", url: "https://www.theverge.com/rss/index.xml", region: "global" },
+  // GLOBAL — skip heavy feeds, NewsAPI handles global
 ];
 
 // Simple RSS/Atom XML parser — extracts title, description, link from feed items
@@ -159,8 +158,3 @@ export async function fetchRegionalHeadlines(
   return allArticles;
 }
 
-export async function fetchGlobalHeadlines(): Promise<NewsArticle[]> {
-  const globalFeeds = REGIONAL_FEEDS.filter((f) => f.region === "global");
-  const results = await Promise.all(globalFeeds.map(fetchFeed));
-  return results.flat();
-}
