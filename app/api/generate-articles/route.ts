@@ -3,7 +3,7 @@ import { getAnthropicClient, ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { supabaseAdmin } from "../../lib/supabase";
 import { fetchTopTechHeadlines, slugify, REGIONS } from "../../lib/newsapi";
 // HN disabled in pipeline to stay within 60s timeout
-import { fetchRegionalHeadlines, fetchGlobalHeadlines } from "../../lib/feeds";
+import { fetchRegionalHeadlines } from "../../lib/feeds";
 
 export const maxDuration = 60;
 
@@ -35,12 +35,8 @@ async function handleGenerate(req: NextRequest) {
     let headlines;
 
     if (regionToRun === "global") {
-      // Global: RSS feeds + NewsAPI fallback (skip HN to stay in timeout)
-      const [rssFeed, newsApi] = await Promise.all([
-        fetchGlobalHeadlines().catch(() => []),
-        fetchTopTechHeadlines().catch(() => []),
-      ]);
-      headlines = rssFeed.length > 0 ? rssFeed : newsApi;
+      // Global: NewsAPI handles this (fast, no RSS overhead)
+      headlines = await fetchTopTechHeadlines().catch(() => []);
     } else {
       // Regional: REAL regional publications via RSS
       const rssHeadlines = await fetchRegionalHeadlines(regionToRun).catch(() => []);
@@ -56,7 +52,7 @@ async function handleGenerate(req: NextRequest) {
     let created = 0;
 
     for (const news of headlines) {
-      if (created >= 1) break;
+      if (created >= 3) break;
 
       const slug = slugify(news.title);
 
