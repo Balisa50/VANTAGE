@@ -8,7 +8,7 @@ export const revalidate = 120;
 
 export default async function HomePage() {
   // Only show articles from last 24 hours — always fresh
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
   const { data } = await supabase
     .from("articles")

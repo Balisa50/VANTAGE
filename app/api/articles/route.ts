@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   // Default: only last 24 hours
   const defaultCutoff = new Date(
-    Date.now() - 24 * 60 * 60 * 1000
+    Date.now() - 48 * 60 * 60 * 1000
   ).toISOString();
 
   let query = supabase
