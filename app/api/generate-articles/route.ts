@@ -52,7 +52,7 @@ async function handleGenerate(req: NextRequest) {
     let created = 0;
 
     for (const news of headlines) {
-      if (created >= 3) break;
+      if (created >= 1) break;
 
       const slug = slugify(news.title);
 
