@@ -9,6 +9,7 @@ export default function SearchBar() {
   const [results, setResults] = useState<Article[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -54,8 +55,30 @@ export default function SearchBar() {
     }, 300);
   }
 
+  async function handleGenerate() {
+    if (generating || query.trim().length < 3) return;
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/search-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.article) {
+          setResults([data.article]);
+        }
+      }
+    } catch {
+      // Silent
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   return (
-    <div ref={containerRef} className="relative w-full max-w-sm">
+    <div ref={containerRef} className="relative w-full max-w-sm" style={{ zIndex: 100 }}>
       <div className="relative">
         <input
           type="text"
@@ -78,13 +101,13 @@ export default function SearchBar() {
             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
         </svg>
-        {loading && (
+        {(loading || generating) && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 border border-accent-amber border-t-transparent rounded-full animate-spin" />
         )}
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-surface-elevated border border-border rounded-lg shadow-2xl z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full mt-2 w-full bg-surface-elevated border border-border rounded-lg shadow-2xl max-h-80 overflow-y-auto" style={{ zIndex: 200 }}>
           {results.map((article) => (
             <Link
               key={article.id}
@@ -101,6 +124,11 @@ export default function SearchBar() {
                     {article.category}
                   </span>
                 )}
+                {article.region && article.region !== "global" && (
+                  <span className="text-[10px] font-mono text-text-secondary">
+                    {article.region}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-text-primary font-serif leading-snug">
                 {article.headline}
@@ -111,10 +139,30 @@ export default function SearchBar() {
       )}
 
       {open && query.length >= 2 && results.length === 0 && !loading && (
-        <div className="absolute top-full mt-2 w-full bg-surface-elevated border border-border rounded-lg shadow-2xl z-50 p-4">
-          <p className="text-sm text-text-secondary text-center">
-            No stories found
-          </p>
+        <div className="absolute top-full mt-2 w-full bg-surface-elevated border border-border rounded-lg shadow-2xl p-4" style={{ zIndex: 200 }}>
+          {generating ? (
+            <div className="text-center">
+              <div className="w-4 h-4 border-2 border-accent-amber border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-sm text-accent-amber font-mono">
+                Generating analysis...
+              </p>
+              <p className="text-xs text-text-secondary mt-1">
+                Building a deep-dive on this topic
+              </p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-sm text-text-secondary mb-3">
+                No stories found for &ldquo;{query}&rdquo;
+              </p>
+              <button
+                onClick={handleGenerate}
+                className="px-4 py-2 bg-accent-amber/10 text-accent-amber text-xs font-mono rounded-lg border border-accent-amber/20 hover:bg-accent-amber/20 transition-all"
+              >
+                Generate analysis now
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -8,6 +8,9 @@ import SignalScore from "../../components/SignalScore";
 import ReadingProgress from "../../components/ReadingProgress";
 import ShareButtons from "../../components/ShareButtons";
 import RelatedArticles from "../../components/RelatedArticles";
+import BookmarkButton from "../../components/BookmarkButton";
+import LiveTimestamp from "../../components/LiveTimestamp";
+import ReadTracker from "../../components/ReadTracker";
 
 export const revalidate = 3600;
 
@@ -78,11 +81,6 @@ export default async function ArticlePage({
   const article = await getArticle(slug);
   if (!article) notFound();
 
-  const publishedDate = new Date(article.published_at).toLocaleDateString(
-    "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
-  );
-
   const gradient =
     CATEGORY_GRADIENTS[article.category ?? ""] ??
     "from-accent-amber/8 to-accent-amber/3";
@@ -93,6 +91,11 @@ export default async function ArticlePage({
   return (
     <div className="min-h-screen">
       <ReadingProgress />
+      <ReadTracker
+        slug={article.slug}
+        category={article.category}
+        region={article.region}
+      />
       <Masthead />
 
       {/* Category gradient hero */}
@@ -137,9 +140,7 @@ export default async function ArticlePage({
               </p>
             )}
             <div className="mt-6 flex items-center gap-6 flex-wrap">
-              <time className="text-sm text-text-secondary font-mono">
-                {publishedDate}
-              </time>
+              <LiveTimestamp date={article.published_at} />
               <span className="text-sm text-text-secondary font-mono">
                 {Math.ceil(article.full_body.split(" ").length / 200)} min read
               </span>
@@ -147,8 +148,9 @@ export default async function ArticlePage({
                 <SignalScore score={article.signal_score} />
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-4 flex items-center gap-3">
               <ShareButtons headline={article.headline} slug={article.slug} />
+              <BookmarkButton article={article} size="md" />
             </div>
           </header>
         </div>

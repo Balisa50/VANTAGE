@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ArticleCard from "./ArticleCard";
-import CategoryFilter from "./CategoryFilter";
-import RegionSelector from "./RegionSelector";
 import { SkeletonFeed } from "./SkeletonCard";
 import type { Article } from "../lib/supabase";
 
@@ -15,68 +13,39 @@ export default function ArticleFeed({
   lastUpdated: string | null;
 }) {
   const [articles, setArticles] = useState(initialArticles);
-  const [category, setCategory] = useState("All");
-  const [region, setRegion] = useState("all");
   const [loading, setLoading] = useState(false);
 
-  async function applyFilters(cat: string, reg: string) {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (cat !== "All") params.set("category", cat);
-      if (reg !== "all") params.set("region", reg);
-
-      const res = await fetch(`/api/articles?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setArticles(data.articles);
+  // Auto-refresh every 2 minutes for real-time feel
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/articles");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.articles.length > 0) {
+            setArticles(data.articles);
+          }
+        }
+      } catch {
+        // Silent — don't break the UI
       }
-    } catch {
-      let filtered = initialArticles;
-      if (cat !== "All") filtered = filtered.filter((a) => a.category === cat);
-      if (reg !== "all") filtered = filtered.filter((a) => a.region === reg);
-      setArticles(filtered);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleCategory(cat: string) {
-    setCategory(cat);
-    if (cat === "All" && region === "all") {
-      setArticles(initialArticles);
-      return;
-    }
-    applyFilters(cat, region);
-  }
-
-  function handleRegion(reg: string) {
-    setRegion(reg);
-    if (reg === "all" && category === "All") {
-      setArticles(initialArticles);
-      return;
-    }
-    applyFilters(category, reg);
-  }
+    }, 120_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [hero, ...rest] = articles;
 
   return (
     <>
-      <div className="space-y-3 mb-8">
-        <CategoryFilter active={category} onChange={handleCategory} />
-        <RegionSelector active={region} onChange={handleRegion} />
-      </div>
-
       {loading ? (
         <SkeletonFeed />
       ) : articles.length === 0 ? (
         <div className="text-center py-24">
           <p className="text-text-secondary font-serif text-xl italic">
-            No stories match these filters yet.
+            Intelligence is being gathered.
           </p>
           <p className="mt-2 text-text-secondary font-mono text-sm">
-            New stories are published throughout the day.
+            Fresh analysis drops every 2 hours.
           </p>
         </div>
       ) : (
