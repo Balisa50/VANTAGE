@@ -1,38 +1,41 @@
 import { NextRequest } from "next/server";
 import { getAnthropicClient, buildChatSystemPrompt } from "../../lib/anthropic";
 
-// Simple in-memory rate limiter: max 20 requests per IP per minute
+// Rate limit: 5 requests per IP per minute (serverless-safe)
 const rateMap = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 60_000;
-const MAX_REQUESTS = 20;
+const MAX_REQUESTS = 5;
+
+// Global daily budget: max 200 chat calls per day across ALL users
+let dailyCount = 0;
+let dailyReset = Date.now() + 86_400_000;
+const DAILY_MAX = 200;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
-  const entry = rateMap.get(ip);
 
+  // Daily global limit
+  if (now > dailyReset) { dailyCount = 0; dailyReset = now + 86_400_000; }
+  if (dailyCount >= DAILY_MAX) return true;
+
+  // Per-IP limit
+  const entry = rateMap.get(ip);
   if (!entry || now > entry.resetAt) {
     rateMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    dailyCount++;
     return false;
   }
-
   entry.count++;
   if (entry.count > MAX_REQUESTS) return true;
+  dailyCount++;
   return false;
 }
-
-// Clean stale entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of rateMap) {
-    if (now > entry.resetAt) rateMap.delete(ip);
-  }
-}, 300_000);
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   if (isRateLimited(ip)) {
-    return new Response("Rate limit exceeded. Try again in a minute.", { status: 429 });
+    return new Response("Slow down. Try again in a minute.", { status: 429 });
   }
 
   try {
@@ -42,17 +45,21 @@ export async function POST(req: NextRequest) {
       return new Response("Missing messages or articleBody", { status: 400 });
     }
 
-    if (messages.length > 16) {
-      return new Response("Too many messages", { status: 400 });
+    // Hard cap on conversation length
+    if (messages.length > 8) {
+      return new Response("Conversation limit reached", { status: 400 });
     }
 
+    // Cap article body sent to Claude to reduce token cost
+    const trimmedBody = articleBody.slice(0, 3000);
+
     const stream = await getAnthropicClient().messages.stream({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: buildChatSystemPrompt(articleBody),
-      messages: messages.map((m: { role: string; content: string }) => ({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      system: buildChatSystemPrompt(trimmedBody),
+      messages: messages.slice(-6).map((m: { role: string; content: string }) => ({
         role: m.role,
-        content: m.content,
+        content: m.content.slice(0, 500),
       })),
     });
 
