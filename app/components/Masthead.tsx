@@ -3,8 +3,8 @@ import SearchBar from "./SearchBar";
 
 export default function Masthead() {
   return (
-    <header className="relative border-b border-border overflow-hidden" style={{ zIndex: 50 }}>
-      <div className="absolute inset-0 hero-glow pointer-events-none" />
+    <header className="relative border-b border-border" style={{ zIndex: 50, overflow: "visible" }}>
+      <div className="absolute inset-0 hero-glow pointer-events-none overflow-hidden" />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <div className="text-center mb-3">
