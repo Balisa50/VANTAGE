@@ -67,7 +67,8 @@
       "Bash(cmd.exe /c \"gh --version\")",
       "Bash(npm list:*)",
       "Bash(npx --yes @gitbeaker/cli --version)",
-      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-one\" -H \"Content-Type: application/json\" -H \"x-chain-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\" -d '{\"\"title\"\":\"\"Apple announces Vision Pro 2 with M5 chip at WWDC 2026\"\",\"\"description\"\":\"\"Apple reveals second-generation spatial computing headset with 8K micro-OLED displays and M5 processor, priced at $2999\"\",\"\"source\"\":\"\"The Verge\"\",\"\"region\"\":\"\"global\"\",\"\"regionLabel\"\":\"\"Global\"\"}')"
+      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-one\" -H \"Content-Type: application/json\" -H \"x-chain-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\" -d '{\"\"title\"\":\"\"Apple announces Vision Pro 2 with M5 chip at WWDC 2026\"\",\"\"description\"\":\"\"Apple reveals second-generation spatial computing headset with 8K micro-OLED displays and M5 processor, priced at $2999\"\",\"\"source\"\":\"\"The Verge\"\",\"\"region\"\":\"\"global\"\",\"\"regionLabel\"\":\"\"Global\"\"}')",
+      "Bash(curl -s -X POST \"https://vantage-three-chi.vercel.app/api/generate-one\" -H \"Content-Type: application/json\" -H \"x-chain-secret: w+zpvpb4QgnMm3EMGmOcYz/ZQ+rlW3mOukoYv5HLbE4=\" -d '{\"\"title\"\":\"\"OpenAI releases GPT-5 with reasoning capabilities\"\",\"\"description\"\":\"\"OpenAI launches its most powerful model yet with advanced reasoning\"\",\"\"source\"\":\"\"TechCrunch\"\",\"\"region\"\":\"\"global\"\",\"\"regionLabel\"\":\"\"Global\"\"}')"
     ]
   }
 }
