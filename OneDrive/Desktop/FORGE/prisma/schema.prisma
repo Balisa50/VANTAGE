@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Tier {
+  free
+  pro
+  team
+}
+
+enum AccountabilityMode {
+  daily
+  weekday
+  custom
+  weekly
+  monthly
+}
+
+enum TaskStatus {
+  locked
+  available
+  in_progress
+  pending_verification
+  verified
+  failed
+}
+
+enum CheckinStatus {
+  passed
+  failed
+  grace
+  respite
+}
+
+enum IntegrityEvent {
+  tab_switch
+  copy_paste
+  devtools
+  fast_pass
+  skip_shame
+  multi_fail
+  clean_streak
+  perfect_defence
+}
+
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  passwordHash     String?
+  name             String
+  timezone         String   @default("UTC")
+  tier             Tier     @default(free)
+  integrityScore   Int      @default(100)
+  stripeCustomerId String?
+  emailVerified    DateTime?
+  image            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  roadmaps         Roadmap[]
+  checkins         Checkin[]
+  integrityLogs    IntegrityLog[]
+  badges           UserBadge[]
+  socialPosts      SocialPost[]
+  graceDays        GraceDay[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Roadmap {
+  id          String              @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  mode        AccountabilityMode  @default(daily)
+  commitDays  Int[]
+  startedAt   DateTime            @default(now())
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks      Track[]
+  streaks     Streak[]
+  checkins    Checkin[]
+}
+
+model Track {
+  id        String   @id @default(cuid())
+  roadmapId String
+  title     String
+  color     String   @default("#00c8ff")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  roadmap   Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  phases    Phase[]
+  checkins  Checkin[]
+}
+
+model Phase {
+  id          String   @id @default(cuid())
+  trackId     String
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  track     Track      @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  phaseWipes PhaseWipe[]
+}
+
+model Task {
+  id             String     @id @default(cuid())
+  phaseId        String
+  title          String
+  detail         String
+  why            String?
+  starterCode    String?
+  resources      String[]
+  milestone      String?
+  estimatedHours Float?
+  sortOrder      Int        @default(0)
+  status         TaskStatus @default(locked)
+  verifiedAt     DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  phase     Phase     @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  checkins  Checkin[]
+}
+
+model Checkin {
+  id           String        @id @default(cuid())
+  userId       String
+  roadmapId    String
+  trackId      String
+  taskId       String
+  description  String
+  evidenceType String        @default("screenshot")
+  evidenceUrl  String?
+  evidenceData Json?
+  status       CheckinStatus @default(passed)
+  attemptNum   Int           @default(1)
+  createdAt    DateTime      @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmap       Roadmap       @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  track         Track         @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  task          Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  interrogation Interrogation?
+}
+
+model Interrogation {
+  id              String   @id @default(cuid())
+  checkinId       String   @unique
+  passed          Boolean  @default(false)
+  isDefence       Boolean  @default(false)
+  masteryScore    Float    @default(0)
+  applicationScore Float   @default(0)
+  analysisScore   Float    @default(0)
+  recallScore     Float    @default(0)
+  depthScore      Float    @default(0)
+  overallScore    Float    @default(0)
+  feedback        String?
+  transcript      Json     @default("[]")
+  antiCheatFlags  Json     @default("[]")
+  tokensUsed      Int      @default(0)
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  checkin         Checkin  @relation(fields: [checkinId], references: [id], onDelete: Cascade)
+}
+
+model Streak {
+  id           String   @id @default(cuid())
+  userId       String
+  roadmapId    String
+  current      Int      @default(0)
+  best         Int      @default(0)
+  lastCheckin  DateTime?
+  updatedAt    DateTime @updatedAt
+
+  roadmap      Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roadmapId])
+}
+
+model IntegrityLog {
+  id          String         @id @default(cuid())
+  userId      String
+  event       String
+  description String
+  scoreBefore Int
+  scoreAfter  Int
+  delta       Int
+  createdAt   DateTime       @default(now())
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GraceDay {
+  id        String   @id @default(cuid())
+  userId    String
+  roadmapId String
+  usedAt    DateTime @default(now())
+  month     Int
+  year      Int
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SocialPost {
+  id         String   @id @default(cuid())
+  userId     String
+  postType   String
+  platform   String
+  postUrl    String?
+  skipped    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PhaseWipe {
+  id        String   @id @default(cuid())
+  userId    String
+  phaseId   String
+  reason    String
+  createdAt DateTime @default(now())
+
+  phase     Phase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeKey  String
+  awardedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeKey])
+}

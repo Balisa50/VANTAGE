@@ -1,0 +1,178 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-base: #060608;
+    --bg-panel: #0c0c12;
+    --bg-card: #111118;
+    --border: #1e1e2e;
+    --red: #ff2d2d;
+    --blue: #00c8ff;
+    --green: #00ff88;
+    --orange: #ff7c3a;
+    --yellow: #ffd60a;
+    --purple: #cba6f7;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a0;
+    --text-dim: #44445a;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Rajdhani', 'Inter', sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    letter-spacing: 0.05em;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  ::selection { background: rgba(0,200,255,0.2); color: var(--blue); }
+}
+
+@layer components {
+  .forge-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .forge-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .forge-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+  }
+
+  .forge-btn-primary {
+    background: var(--red);
+    color: white;
+  }
+  .forge-btn-primary:hover {
+    background: #ff4444;
+    box-shadow: 0 0 20px rgba(255,45,45,0.4);
+  }
+  .forge-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .forge-btn-blue {
+    background: var(--blue);
+    color: #000;
+  }
+  .forge-btn-blue:hover {
+    background: #22d4ff;
+    box-shadow: 0 0 20px rgba(0,200,255,0.4);
+  }
+
+  .forge-btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .forge-btn-ghost:hover {
+    border-color: var(--text-dim);
+    color: var(--text-primary);
+  }
+
+  .forge-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    padding: 0.625rem 0.875rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9375rem;
+    width: 100%;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .forge-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 1px rgba(0,200,255,0.2);
+  }
+  .forge-input::placeholder { color: var(--text-dim); }
+
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+
+  .code-block {
+    background: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 6px;
+    padding: 1rem;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .timer-bar { height: 3px; border-radius: 2px; transition: width 1s linear; }
+
+  .glow-red { box-shadow: 0 0 20px rgba(255,45,45,0.3); }
+  .glow-blue { box-shadow: 0 0 20px rgba(0,200,255,0.3); }
+  .glow-green { box-shadow: 0 0 20px rgba(0,255,136,0.3); }
+
+  .streak-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    line-height: 1;
+    letter-spacing: 0.05em;
+  }
+
+  .mono { font-family: 'Share Tech Mono', 'Courier New', monospace; }
+}
