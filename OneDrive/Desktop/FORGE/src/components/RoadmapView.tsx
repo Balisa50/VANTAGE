@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Clock, Zap, Search, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface Task {
   id: string;
@@ -33,13 +35,13 @@ interface Roadmap {
   tracks: Track[];
 }
 
-const TASK_STATUS_ICONS: Record<string, { icon: string; color: string }> = {
-  locked: { icon: "🔒", color: "var(--text-dim)" },
-  available: { icon: "⏳", color: "var(--yellow)" },
-  in_progress: { icon: "⚡", color: "var(--blue)" },
-  pending_verification: { icon: "🔍", color: "var(--orange)" },
-  verified: { icon: "✅", color: "var(--green)" },
-  failed: { icon: "❌", color: "var(--red)" },
+const TASK_STATUS: Record<string, { Icon: LucideIcon; color: string }> = {
+  locked:               { Icon: Lock,         color: "var(--text-dim)"  },
+  available:            { Icon: Clock,        color: "var(--yellow)"    },
+  in_progress:          { Icon: Zap,          color: "var(--blue)"      },
+  pending_verification: { Icon: Search,       color: "var(--orange)"    },
+  verified:             { Icon: CheckCircle2, color: "var(--green)"     },
+  failed:               { Icon: XCircle,      color: "var(--red)"       },
 };
 
 export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
@@ -64,18 +66,21 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                 style={{
                   padding: "0.5rem 1.25rem",
                   borderRadius: "6px",
-                  fontFamily: "'Rajdhani', sans-serif",
+                  fontFamily: "var(--font-body)",
                   fontWeight: 600,
-                  fontSize: "0.9375rem",
+                  fontSize: "0.875rem",
                   border: activeTrack === t.id ? `1px solid ${t.color}` : "1px solid var(--border)",
                   background: activeTrack === t.id ? `${t.color}15` : "transparent",
                   color: activeTrack === t.id ? t.color : "var(--text-secondary)",
                   cursor: "pointer",
                   transition: "all 0.15s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
                 }}
               >
                 {t.title}
-                <span style={{ marginLeft: "0.5rem", fontFamily: "'Share Tech Mono', monospace", fontSize: "0.75rem", opacity: 0.7 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.6875rem", opacity: 0.7 }}>
                   {pct}%
                 </span>
               </button>
@@ -120,7 +125,7 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontFamily: "'Share Tech Mono', monospace",
+                      fontFamily: "var(--font-mono)",
                       fontSize: "0.75rem",
                       color: pct === 100 ? "#000" : "var(--text-dim)",
                       flexShrink: 0,
@@ -128,18 +133,20 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                       {pi + 1}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.125rem", letterSpacing: "0.05em", textAlign: "left" }}>{phase.title}</div>
-                      <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.6875rem", color: "var(--text-dim)", marginTop: "0.25rem" }}>
+                      <div style={{ fontFamily: "var(--font-headline)", fontSize: "1rem", fontWeight: 600, textAlign: "left" }}>{phase.title}</div>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.6875rem", color: "var(--text-dim)", marginTop: "0.25rem" }}>
                         {done}/{total} tasks
                       </div>
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexShrink: 0 }}>
-                    {/* Progress bar */}
                     <div style={{ width: "80px", height: "3px", background: "var(--border)", borderRadius: "2px" }}>
                       <div style={{ height: "100%", width: `${pct}%`, background: track.color, borderRadius: "2px" }} />
                     </div>
-                    <span style={{ color: "var(--text-dim)", fontSize: "0.875rem" }}>{isExpanded ? "▲" : "▼"}</span>
+                    {isExpanded
+                      ? <ChevronUp size={16} color="var(--text-dim)" />
+                      : <ChevronDown size={16} color="var(--text-dim)" />
+                    }
                   </div>
                 </button>
 
@@ -155,34 +162,34 @@ export default function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
                     >
                       <div style={{ borderTop: "1px solid var(--border)" }}>
                         {phase.tasks.map((task, ti) => {
-                          const s = TASK_STATUS_ICONS[task.status] ?? { icon: "?", color: "var(--text-dim)" };
+                          const s = TASK_STATUS[task.status] ?? { Icon: Clock, color: "var(--text-dim)" };
                           return (
                             <div
                               key={task.id}
                               style={{
                                 padding: "1rem 1.5rem",
                                 borderBottom: ti < phase.tasks.length - 1 ? "1px solid var(--border)" : "none",
-                                opacity: task.status === "locked" ? 0.5 : 1,
+                                opacity: task.status === "locked" ? 0.45 : 1,
                               }}
                             >
                               <div className="flex items-start gap-3">
-                                <span style={{ fontSize: "1rem", flexShrink: 0, marginTop: "0.1rem" }}>{s.icon}</span>
+                                <s.Icon size={16} color={s.color} strokeWidth={2} style={{ flexShrink: 0, marginTop: "0.15rem" }} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: "0.9375rem", color: s.color }}>{task.title}</div>
+                                  <div style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.9375rem", color: s.color }}>{task.title}</div>
                                   <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", marginTop: "0.25rem", lineHeight: 1.5 }}>{task.detail}</p>
                                   {task.milestone && (
-                                    <div style={{ marginTop: "0.5rem", fontFamily: "'Share Tech Mono', monospace", fontSize: "0.75rem", color: "var(--text-dim)" }}>
-                                      ✓ {task.milestone}
+                                    <div style={{ marginTop: "0.5rem", fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-dim)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                                      <CheckCircle2 size={11} color="var(--green)" /> {task.milestone}
                                     </div>
                                   )}
                                   {task.verifiedAt && (
-                                    <div style={{ marginTop: "0.25rem", fontFamily: "'Share Tech Mono', monospace", fontSize: "0.6875rem", color: "var(--green)" }}>
+                                    <div style={{ marginTop: "0.25rem", fontFamily: "var(--font-mono)", fontSize: "0.6875rem", color: "var(--green)" }}>
                                       Verified {new Date(task.verifiedAt).toLocaleDateString()}
                                     </div>
                                   )}
                                 </div>
                                 {task.estimatedHours && (
-                                  <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.6875rem", color: "var(--text-dim)", flexShrink: 0 }}>
+                                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.6875rem", color: "var(--text-dim)", flexShrink: 0 }}>
                                     ~{task.estimatedHours}h
                                   </div>
                                 )}
