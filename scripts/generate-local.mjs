@@ -103,7 +103,7 @@ Return ONLY raw JSON. No markdown fences. No preamble.
   "why_it_matters": "3-4 paragraphs. Strong position. Second-order effects. At least one insight nobody else is seeing.",
   "who_wins_loses": "2-3 paragraphs. Name specific companies, executives, countries.",
   "what_to_watch": "1-2 paragraphs. Specific dates, falsifiable predictions.",
-  "social_pulse": "1 paragraph or null",
+  "social_pulse": "2-3 sentences minimum. What are engineers, founders, builders, and the tech community actually saying about this? What does their reaction reveal about the real significance? What's the sentiment on HN, Reddit, Twitter? Synthesize the community perspective as evidence, not as quotes.",
   "full_body": "Complete article, 800+ words. Publication-ready prose. Hook opening. Strong argument.",
   "signal_score": "Integer 1-100. Be honest."
 }`;

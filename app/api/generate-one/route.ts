@@ -10,7 +10,7 @@ const PIPELINE_PROMPT = `Sharp tech analyst. Write like Ben Thompson + Matt Levi
 If NOT tech/business/policy: {"skip":true,"reason":"..."}
 
 Return ONLY raw JSON:
-{"headline":"Verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2 paragraphs. Facts, names, numbers.","why_it_matters":"2 paragraphs. Take position. Second-order effects.","who_wins_loses":"1 paragraph. Name companies, countries.","what_to_watch":"1 paragraph. Specific predictions.","social_pulse":"1 sentence or null","full_body":"500 word article. Sharp. No filler. Hook opening. MUST complete JSON properly.","signal_score":"1-100"}`;
+{"headline":"Verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2 paragraphs. Facts, names, numbers.","why_it_matters":"2 paragraphs. Take position. Second-order effects.","who_wins_loses":"1 paragraph. Name companies, countries.","what_to_watch":"1 paragraph. Specific predictions.","social_pulse":"2-3 sentences. What are engineers, founders, and the tech community actually saying? What does their reaction reveal about the story's real significance? Synthesize sentiment, not quotes.","full_body":"500 word article. Sharp. No filler. Hook opening. MUST complete JSON properly.","signal_score":"1-100"}`;
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -38,9 +38,19 @@ export async function POST(req: NextRequest) {
     const slug = slugify(title);
     const db = getDb();
 
-    // Check duplicate
+    // Check duplicate by slug
     const { data: existing } = await db.from("articles").select("id").eq("slug", slug).single();
     if (existing) return NextResponse.json({ status: "skipped", slug });
+
+    // Check duplicate by similar headline (first 3 significant words)
+    const words = title.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter((w: string) => w.length > 3).slice(0, 3);
+    if (words.length >= 2) {
+      const { data: similar } = await db.from("articles").select("id")
+        .ilike("headline", `%${words[0]}%`)
+        .ilike("headline", `%${words[1]}%`)
+        .limit(1);
+      if (similar && similar.length > 0) return NextResponse.json({ status: "skipped", reason: "similar exists" });
+    }
 
     // Call Claude
     const apiKey = process.env.VANTAGE_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;

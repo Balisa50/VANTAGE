@@ -24,7 +24,7 @@ RULES:
 If NOT tech/business/policy: {"skip":true,"reason":"Not a tech story"}
 
 Return ONLY raw JSON:
-{"headline":"A verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2-3 paragraphs. Names, numbers, dates.","why_it_matters":"3-4 paragraphs. Strong position. Second-order effects.","who_wins_loses":"2-3 paragraphs. Name companies, executives, countries.","what_to_watch":"1-2 paragraphs. Specific predictions with dates.","social_pulse":"1 paragraph or null","full_body":"Complete article, 800+ words. Publication-ready. Hook opening. Every paragraph earns the next.","signal_score":"1-100"}`;
+{"headline":"A verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2-3 paragraphs. Names, numbers, dates.","why_it_matters":"3-4 paragraphs. Strong position. Second-order effects.","who_wins_loses":"2-3 paragraphs. Name companies, executives, countries.","what_to_watch":"1-2 paragraphs. Specific predictions with dates.","social_pulse":"2-3 sentences. What are engineers, founders, the tech community saying? What does their reaction reveal? Synthesize sentiment, not quotes.","full_body":"Complete article, 800+ words. Publication-ready. Hook opening. Every paragraph earns the next.","signal_score":"1-100"}`;
 
 // Direct Anthropic API call — no SDK needed, works in Edge Runtime
 async function callClaude(systemPrompt: string, userContent: string): Promise<string> {
