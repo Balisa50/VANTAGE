@@ -1,5 +1,6 @@
 import Masthead from "../components/Masthead";
 import TrendingBoard from "../components/TrendingBoard";
+import VirloPulse from "../components/VirloPulse";
 import { supabase, type Article } from "../lib/supabase";
 
 export const revalidate = 120;
@@ -27,6 +28,7 @@ export default async function TrendingPage() {
           <span>&larr;</span> Back
         </a>
 
+        <VirloPulse />
         <TrendingBoard initialArticles={articles} />
       </main>
     </div>

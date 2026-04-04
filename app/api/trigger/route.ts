@@ -145,10 +145,49 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Virlo integration: fetch trending social topics and generate articles from viral signals
+  const virloKey = process.env.VIRLO_API_KEY;
+  if (virloKey) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const virloRes = await fetch(
+        "https://api.virlo.ai/v1/hashtags?limit=5&order_by=views&sort=desc",
+        { headers: { Authorization: `Bearer ${virloKey}` }, signal: controller.signal }
+      );
+      clearTimeout(timeout);
+
+      if (virloRes.ok) {
+        const virloData = await virloRes.json();
+        const hashtags = (virloData.data || virloData.hashtags || []).slice(0, 1);
+        for (const tag of hashtags) {
+          const tagName = tag.name || tag.hashtag || tag.tag;
+          if (tagName) {
+            fetch(`${siteUrl}/api/generate-one`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-chain-secret": cronSecret },
+              body: JSON.stringify({
+                title: `${tagName} is trending across social media with ${tag.views || tag.view_count || "millions of"} views`,
+                description: `The hashtag ${tagName} is going viral on TikTok, YouTube, and Instagram. Analyze the technology and business implications behind this social media trend.`,
+                source: "Virlo Social Intelligence",
+                region: "global",
+                regionLabel: "Global",
+              }),
+            }).catch(() => {});
+            dispatched++;
+          }
+        }
+      }
+    } catch {
+      // Virlo unavailable — continue without it
+    }
+  }
+
   return NextResponse.json({
     triggered: true,
     dispatched,
+    virlo: !!virloKey,
     timestamp: new Date().toISOString(),
-    message: `Dispatched ${dispatched} article generations across ${REGIONS.length} regions`,
+    message: `Dispatched ${dispatched} article generations across ${REGIONS.length} regions${virloKey ? " + Virlo social signals" : ""}`,
   });
 }
