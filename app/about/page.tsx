@@ -73,6 +73,10 @@ export default function AboutPage() {
               title="Save what matters"
               description="Bookmark articles to come back to later. No account needed."
             />
+            <FeatureCard
+              title="Social pulse via Virlo"
+              description="See what's going viral across TikTok, YouTube, and Instagram in real time. Powered by Virlo's trend intelligence API."
+            />
           </div>
         </div>
 
