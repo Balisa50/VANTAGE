@@ -10,7 +10,7 @@ const PIPELINE_PROMPT = `Sharp tech analyst. Write like Ben Thompson + Matt Levi
 If NOT tech/business/policy: {"skip":true,"reason":"..."}
 
 Return ONLY raw JSON:
-{"headline":"Verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2 paragraphs. Facts, names, numbers.","why_it_matters":"2 paragraphs. Take position. Second-order effects.","who_wins_loses":"1 paragraph. Name companies, countries.","what_to_watch":"1 paragraph. Specific predictions.","social_pulse":"2-3 sentences. What are engineers, founders, and the tech community actually saying? What does their reaction reveal about the story's real significance? Synthesize sentiment, not quotes.","full_body":"500 word article. Sharp. No filler. Hook opening. MUST complete JSON properly.","signal_score":"1-100"}`;
+{"headline":"Verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2 paragraphs. Facts, names, numbers.","why_it_matters":"2 paragraphs. Take position. Second-order effects.","who_wins_loses":"1 paragraph. Name companies, countries.","what_to_watch":"1 paragraph. Specific predictions.","social_pulse":"2-3 sentences. What are engineers, founders, and the tech community actually saying? What does their reaction reveal about the story's real significance? Synthesize sentiment, not quotes.","full_body":"300-400 word article. Sharp. No filler. Hook opening. Keep it tight so the JSON completes within token limits.","signal_score":"1-100"}`;
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -80,10 +80,33 @@ export async function POST(req: NextRequest) {
     const data = await claudeRes.json();
     const text = data.content?.[0]?.text || "";
 
-    const cleaned = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "").trim();
+    let cleaned = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "").trim();
+
+    // Repair truncated JSON: if it doesn't end with }, try to close it
+    if (!cleaned.endsWith("}")) {
+      // Find the last complete key-value pair
+      const lastQuote = cleaned.lastIndexOf('"');
+      const lastColon = cleaned.lastIndexOf('":');
+      if (lastColon > 0 && lastColon > cleaned.lastIndexOf('"}')) {
+        // Truncated mid-value — close the string and object
+        cleaned = cleaned.slice(0, lastColon) + '":"truncated"}';
+      } else if (lastQuote > 0) {
+        cleaned = cleaned.slice(0, lastQuote + 1) + "}";
+      } else {
+        cleaned += '"}';
+      }
+    }
+
     const article = JSON.parse(cleaned);
 
     if (article.skip) return NextResponse.json({ status: "skipped", reason: article.reason });
+
+    // If full_body is missing or truncated, build from sections
+    let fullBody = article.full_body || "";
+    if (!fullBody || fullBody === "truncated" || fullBody.length < 100) {
+      const parts = [article.what_happened, article.why_it_matters, article.who_wins_loses, article.what_to_watch, article.social_pulse].filter(Boolean);
+      fullBody = parts.join("\n\n");
+    }
 
     const { error } = await db.from("articles").insert({
       slug,
@@ -95,7 +118,7 @@ export async function POST(req: NextRequest) {
       why_it_matters: article.why_it_matters,
       who_wins_loses: article.who_wins_loses,
       what_to_watch: article.what_to_watch,
-      full_body: article.full_body,
+      full_body: fullBody,
       source_urls: [],
       source_headlines: [title],
       signal_score: parseInt(article.signal_score) || 50,
