@@ -91,7 +91,7 @@ export default function ChatWidget({ articleBody }: { articleBody: string }) {
                   {msg.role === "user" ? "You" : "Vantage"}
                 </span>
                 <p className="mt-1 whitespace-pre-wrap leading-relaxed">
-                  {msg.content}
+                  {msg.content.replace(/\*\*/g, "").replace(/\*/g, "").replace(/^#+\s/gm, "").replace(/^-\s/gm, "").replace(/\s*[—–]\s*/g, ", ")}
                 </p>
               </div>
             ))}
