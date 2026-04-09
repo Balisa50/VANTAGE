@@ -38,7 +38,10 @@ export default function ChatWidget({ articleBody }: { articleBody: string }) {
         }),
       });
 
-      if (!res.ok) throw new Error("Chat request failed");
+      if (!res.ok) {
+        if (res.status === 429) throw new Error("rate_limited");
+        throw new Error("failed");
+      }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -61,10 +64,13 @@ export default function ChatWidget({ articleBody }: { articleBody: string }) {
           });
         }
       }
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error && err.message === "rate_limited"
+        ? "You're asking too fast. Give it a moment and try again."
+        : "Vantage is momentarily unavailable. Please try again shortly.";
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Something went wrong. Try again." },
+        { role: "assistant", content: msg },
       ]);
     } finally {
       setLoading(false);

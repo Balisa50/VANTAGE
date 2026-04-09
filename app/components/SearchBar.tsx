@@ -10,6 +10,7 @@ export default function SearchBar() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -58,6 +59,7 @@ export default function SearchBar() {
   async function handleGenerate() {
     if (generating || query.trim().length < 3) return;
     setGenerating(true);
+    setGenError("");
     try {
       const res = await fetch("/api/search-generate", {
         method: "POST",
@@ -68,10 +70,15 @@ export default function SearchBar() {
         const data = await res.json();
         if (data.article) {
           setResults([data.article]);
+          setGenError("");
         }
+      } else if (res.status === 429) {
+        setGenError("Generation limit reached. Try again later.");
+      } else {
+        setGenError("Could not generate analysis right now. Try again.");
       }
     } catch {
-      // Silent
+      setGenError("Connection issue. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -155,12 +162,16 @@ export default function SearchBar() {
               <p className="text-sm text-text-secondary mb-3">
                 No stories found for &ldquo;{query}&rdquo;
               </p>
-              <button
-                onClick={handleGenerate}
-                className="px-4 py-2 bg-accent-amber/10 text-accent-amber text-xs font-mono rounded-lg border border-accent-amber/20 hover:bg-accent-amber/20 transition-all"
-              >
-                Generate analysis now
-              </button>
+              {genError ? (
+                <p className="text-xs text-text-secondary/70 font-mono">{genError}</p>
+              ) : (
+                <button
+                  onClick={handleGenerate}
+                  className="px-4 py-2 bg-accent-amber/10 text-accent-amber text-xs font-mono rounded-lg border border-accent-amber/20 hover:bg-accent-amber/20 transition-all"
+                >
+                  Generate analysis now
+                </button>
+              )}
             </div>
           )}
         </div>

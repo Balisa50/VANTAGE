@@ -85,8 +85,9 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
+    console.error("Chat error:", err);
     return new Response(
-      err instanceof Error ? err.message : "Chat failed",
+      "Our analysis engine is temporarily unavailable. Please try again in a moment.",
       { status: 500 }
     );
   }

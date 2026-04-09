@@ -36,14 +36,16 @@ export async function POST(req: NextRequest) {
         .lt("published_at", cutoff);
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Expire DB error:", error.message);
+        return NextResponse.json({ error: "Cleanup operation failed" }, { status: 500 });
       }
     }
 
     return NextResponse.json({ expired: count, cutoff });
   } catch (err) {
+    console.error("Expire error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Expire failed" },
+      { error: "Cleanup operation failed" },
       { status: 500 }
     );
   }

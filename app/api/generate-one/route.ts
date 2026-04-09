@@ -126,12 +126,16 @@ export async function POST(req: NextRequest) {
       social_context: article.social_pulse || null,
     });
 
-    if (error) return NextResponse.json({ status: "db_error", message: error.message });
+    if (error) {
+      console.error("generate-one DB error:", error.message);
+      return NextResponse.json({ status: "db_error", message: "Could not save article" });
+    }
     return NextResponse.json({ status: "created", headline: article.headline, slug });
 
   } catch (err) {
+    console.error("generate-one error:", err);
     return NextResponse.json(
-      { status: "error", message: err instanceof Error ? err.message : "Failed" },
+      { status: "error", message: "Article generation failed" },
       { status: 500 }
     );
   }

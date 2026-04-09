@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
     .limit(20);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Search error:", error.message);
+    return NextResponse.json({ error: "Search is temporarily unavailable." }, { status: 500 });
   }
 
   return NextResponse.json({ articles: (data as Article[]) ?? [] });

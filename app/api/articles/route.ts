@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Articles fetch error:", error.message);
+    return NextResponse.json({ error: "Unable to load articles right now. Please refresh." }, { status: 500 });
   }
 
   return NextResponse.json(

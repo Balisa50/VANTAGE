@@ -139,13 +139,15 @@ If this is clearly not a tech/policy/markets story, still analyze it through a t
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Search-generate DB error:", error.message);
+      return NextResponse.json({ error: "Could not save the analysis. Please try again." }, { status: 500 });
     }
 
     return NextResponse.json({ article: inserted });
   } catch (err) {
+    console.error("Search-generate error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Generation failed" },
+      { error: "Analysis generation is temporarily unavailable. Please try again." },
       { status: 500 }
     );
   }
