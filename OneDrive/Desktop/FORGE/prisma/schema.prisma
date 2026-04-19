@@ -36,39 +36,63 @@ enum CheckinStatus {
   respite
 }
 
+// Only positive integrity events — no deductions, no surveillance
 enum IntegrityEvent {
-  tab_switch
-  copy_paste
-  devtools
-  fast_pass
-  skip_shame
-  multi_fail
   clean_streak
   perfect_defence
+  helped_peer
+  own_words
+}
+
+enum UserRole {
+  learner
+  student
+  mentor
+  bootcamp
+}
+
+enum LearningStyle {
+  balanced       // default — mix of theory + practice
+  hands_on       // minimize reading, maximize building
+  theory_first   // foundations, mental models, then apply
+  spaced         // short daily doses, lots of review
+  sprint         // long focused blocks, fewer sessions
 }
 
 model User {
-  id               String   @id @default(cuid())
-  email            String   @unique
+  id               String    @id @default(cuid())
+  email            String    @unique
   passwordHash     String?
   name             String
-  timezone         String   @default("UTC")
-  tier             Tier     @default(free)
-  integrityScore   Int      @default(100)
+  timezone         String    @default("UTC")
+  tier             Tier      @default(free)
+  integrityScore   Int       @default(0)
+  bio              String?
+  github           String?
+  linkedin         String?
+  role             UserRole  @default(learner)
+  isAlsoLearning   Boolean   @default(false)
+  learningStyle    LearningStyle @default(balanced)
+  onboardingDone   Boolean   @default(false)
+  isPublic         Boolean   @default(false)
   stripeCustomerId String?
   emailVerified    DateTime?
   image            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  roadmaps         Roadmap[]
-  checkins         Checkin[]
-  integrityLogs    IntegrityLog[]
-  badges           UserBadge[]
-  socialPosts      SocialPost[]
-  graceDays        GraceDay[]
+  accounts          Account[]
+  sessions          Session[]
+  roadmaps          Roadmap[]
+  checkins          Checkin[]
+  integrityLogs     IntegrityLog[]
+  graceDays         GraceDay[]
+  orgMemberships    OrgMembership[]
+  mentoring         MentorLink[]     @relation("MentorUser")
+  mentees           MentorLink[]     @relation("MenteeUser")
+  certificates      Certificate[]
+  cohortEnrollments CohortEnrollment[]
+  podMemberships    PodMember[]
 }
 
 model Account {
@@ -106,21 +130,26 @@ model VerificationToken {
 }
 
 model Roadmap {
-  id          String              @id @default(cuid())
-  userId      String
-  title       String
-  description String?
-  mode        AccountabilityMode  @default(daily)
-  commitDays  Int[]
-  startedAt   DateTime            @default(now())
-  isActive    Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id               String              @id @default(cuid())
+  userId           String
+  title            String
+  description      String?
+  mode             AccountabilityMode  @default(daily)
+  commitDays       Int[]
+  startedAt        DateTime            @default(now())
+  targetDate       DateTime?
+  dailyDeadlineHour Int               @default(23)
+  isActive         Boolean             @default(true)
+  cohortId         String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort      Cohort?  @relation(fields: [cohortId], references: [id])
   tracks      Track[]
-  streaks     Streak[]
   checkins    Checkin[]
+  graceDays   GraceDay[]
+  certificates Certificate[]
 }
 
 model Track {
@@ -146,7 +175,6 @@ model Phase {
 
   track     Track      @relation(fields: [trackId], references: [id], onDelete: Cascade)
   tasks     Task[]
-  phaseWipes PhaseWipe[]
 }
 
 model Task {
@@ -159,6 +187,7 @@ model Task {
   resources      String[]
   milestone      String?
   estimatedHours Float?
+  deadline       DateTime?
   sortOrder      Int        @default(0)
   status         TaskStatus @default(locked)
   verifiedAt     DateTime?
@@ -176,7 +205,7 @@ model Checkin {
   trackId      String
   taskId       String
   description  String
-  evidenceType String        @default("screenshot")
+  evidenceType String        @default("url")
   evidenceUrl  String?
   evidenceData Json?
   status       CheckinStatus @default(passed)
@@ -191,51 +220,31 @@ model Checkin {
 }
 
 model Interrogation {
-  id              String   @id @default(cuid())
-  checkinId       String   @unique
-  passed          Boolean  @default(false)
-  isDefence       Boolean  @default(false)
-  masteryScore    Float    @default(0)
-  applicationScore Float   @default(0)
-  analysisScore   Float    @default(0)
-  recallScore     Float    @default(0)
-  depthScore      Float    @default(0)
-  overallScore    Float    @default(0)
-  feedback        String?
-  transcript      Json     @default("[]")
-  antiCheatFlags  Json     @default("[]")
-  tokensUsed      Int      @default(0)
-  createdAt       DateTime @default(now())
-  completedAt     DateTime?
-
-  checkin         Checkin  @relation(fields: [checkinId], references: [id], onDelete: Cascade)
-}
-
-model Streak {
   id           String   @id @default(cuid())
-  userId       String
-  roadmapId    String
-  current      Int      @default(0)
-  best         Int      @default(0)
-  lastCheckin  DateTime?
-  updatedAt    DateTime @updatedAt
+  checkinId    String   @unique
+  passed       Boolean  @default(false)
+  isDefence    Boolean  @default(false)
+  overallScore Float    @default(0)
+  feedback     String?
+  transcript   Json     @default("[]")
+  tokensUsed   Int      @default(0)
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
 
-  roadmap      Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roadmapId])
+  checkin      Checkin  @relation(fields: [checkinId], references: [id], onDelete: Cascade)
 }
 
 model IntegrityLog {
-  id          String         @id @default(cuid())
+  id          String          @id @default(cuid())
   userId      String
-  event       String
+  event       IntegrityEvent
   description String
   scoreBefore Int
   scoreAfter  Int
   delta       Int
-  createdAt   DateTime       @default(now())
+  createdAt   DateTime        @default(now())
 
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GraceDay {
@@ -247,37 +256,153 @@ model GraceDay {
   year      Int
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmap   Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
 }
 
-model SocialPost {
-  id         String   @id @default(cuid())
-  userId     String
-  postType   String
-  platform   String
-  postUrl    String?
-  skipped    Boolean  @default(false)
-  createdAt  DateTime @default(now())
+// ─── Certificates & Verification ────────────────────────────────────────
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Certificate {
+  id          String   @id @default(cuid())
+  userId      String
+  roadmapId   String
+  title       String
+  verifyCode  String   @unique @default(cuid())
+  totalTasks  Int
+  totalHours  Float
+  passRate    Float    @default(0)
+  issuedAt    DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmap     Roadmap  @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
 }
 
-model PhaseWipe {
+// ─── B2B: Organizations, Cohorts, Mentoring ────────────────────────────
+
+enum OrgRole {
+  owner
+  admin
+  instructor
+  mentor
+  student
+}
+
+model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  logo          String?
+  description   String?
+  website       String?
+  inviteCode    String   @unique @default(cuid())
+  maxSeats      Int      @default(50)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members       OrgMembership[]
+  cohorts       Cohort[]
+  resources     OrgResource[]
+  mentorLinks   MentorLink[]
+}
+
+model OrgMembership {
   id        String   @id @default(cuid())
   userId    String
-  phaseId   String
-  reason    String
-  createdAt DateTime @default(now())
+  orgId     String
+  role      OrgRole  @default(student)
+  joinedAt  DateTime @default(now())
 
-  phase     Phase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
 }
 
-model UserBadge {
-  id        String   @id @default(cuid())
-  userId    String
-  badgeKey  String
-  awardedAt DateTime @default(now())
+model Cohort {
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String
+  description String?
+  roadmapTemplateId String?
+  startDate   DateTime
+  deadline    DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  org         Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  enrollments CohortEnrollment[]
+  roadmaps    Roadmap[]
+  resources   OrgResource[]
+}
+
+model CohortEnrollment {
+  id        String   @id @default(cuid())
+  cohortId  String
+  userId    String
+  enrolledAt DateTime @default(now())
+  dropped    Boolean  @default(false)
+  droppedAt  DateTime?
+
+  cohort    Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, badgeKey])
+  @@unique([cohortId, userId])
+}
+
+model MentorLink {
+  id        String   @id @default(cuid())
+  mentorId  String
+  menteeId  String
+  orgId     String?
+  note      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  mentor    User          @relation("MentorUser", fields: [mentorId], references: [id], onDelete: Cascade)
+  mentee    User          @relation("MenteeUser", fields: [menteeId], references: [id], onDelete: Cascade)
+  org       Organization? @relation(fields: [orgId], references: [id])
+
+  @@unique([mentorId, menteeId])
+}
+
+model OrgResource {
+  id          String   @id @default(cuid())
+  orgId       String
+  cohortId    String?
+  title       String
+  description String?
+  url         String?
+  fileUrl     String?
+  fileType    String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  cohort      Cohort?      @relation(fields: [cohortId], references: [id])
+}
+
+// ─── Accountability Pods ───────────────────────────────────────────────────
+
+model Pod {
+  id        String      @id @default(cuid())
+  name      String
+  category  String      // "Frontend", "Backend", "Data & AI", etc.
+  maxSize   Int         @default(5)
+  isOpen    Boolean     @default(true)
+  createdAt DateTime    @default(now())
+
+  members   PodMember[]
+}
+
+model PodMember {
+  id        String   @id @default(cuid())
+  podId     String
+  userId    String
+  isActive  Boolean  @default(true)
+  joinedAt  DateTime @default(now())
+
+  pod       Pod      @relation(fields: [podId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([podId, userId])
 }
