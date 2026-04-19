@@ -316,6 +316,56 @@ export default function PodPage() {
                   </span>
                 </div>
               ))}
+
+              {/* Solo pod — invite nudge */}
+              {pod.memberCount === 1 && (() => {
+                const shareText = `I'm building in public on The Forge — AI-powered accountability for developers 🔥\n\nJoin me and get matched into an accountability pod → theforge.app`;
+                const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                return (
+                  <div style={{
+                    marginTop: "0.5rem",
+                    padding: "1.25rem 1.5rem",
+                    background: "rgba(59,130,246,0.05)",
+                    border: "1px solid rgba(59,130,246,0.2)",
+                    borderRadius: "10px",
+                  }}>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.6875rem", color: "var(--blue)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.5rem" }}>
+                      Your pod is waiting to be filled
+                    </div>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: "1rem" }}>
+                      Pods fill faster when people share. Share The Forge with someone who needs accountability — they&apos;ll likely land in your pod.
+                    </p>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <a
+                        href={tweetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                          padding: "0.5rem 1rem",
+                          background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)",
+                          borderRadius: "6px", textDecoration: "none",
+                          color: "var(--blue)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.875rem",
+                        }}
+                      >
+                        Share on X →
+                      </a>
+                      <button
+                        onClick={() => navigator.clipboard.writeText("theforge.app")}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                          padding: "0.5rem 1rem",
+                          background: "transparent", border: "1px solid var(--border)",
+                          borderRadius: "6px", cursor: "pointer",
+                          color: "var(--text-dim)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.875rem",
+                        }}
+                      >
+                        Copy link
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Tip */}

@@ -249,7 +249,8 @@ export default function OnboardingPage() {
       } else if (role === "mentor") {
         window.location.href = "/dashboard/mentor";
       } else {
-        window.location.href = "/dashboard";
+        // Send learners straight to check-in — first interrogation is the product
+        window.location.href = "/dashboard/checkin";
       }
     } catch {
       setError("Something went wrong. Please try again.");

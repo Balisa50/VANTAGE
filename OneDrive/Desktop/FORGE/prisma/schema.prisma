@@ -74,7 +74,7 @@ model User {
   isAlsoLearning   Boolean   @default(false)
   learningStyle    LearningStyle @default(balanced)
   onboardingDone   Boolean   @default(false)
-  isPublic         Boolean   @default(false)
+  isPublic         Boolean   @default(true)
   stripeCustomerId String?
   emailVerified    DateTime?
   image            String?
