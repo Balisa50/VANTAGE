@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg-base: #06070b;
-  --color-bg-surface: #0d0f15;
+  --color-bg-base: #060608;
+  --color-bg-surface: #0c0c12;
   --color-bg-elevated: #13151d;
   --color-border: #1a1d2a;
   --color-text-primary: #ededea;
@@ -19,8 +19,8 @@
 
 @layer base {
   :root {
-    --bg-base: #06070b;
-    --bg-panel: #0d0f15;
+    --bg-base: #060608;
+    --bg-panel: #0c0c12;
     --bg-card: #13151d;
     --border: #1a1d2a;
     --accent: #f59e0b;
@@ -34,9 +34,9 @@
     --text-secondary: #6b7084;
     --text-dim: #3a3d4a;
 
-    --font-headline: 'Playfair Display', Georgia, serif;
-    --font-body: 'Inter', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    --font-headline: 'Bebas Neue', Impact, sans-serif;
+    --font-body: 'Rajdhani', system-ui, sans-serif;
+    --font-mono: 'Share Tech Mono', 'Courier New', monospace;
   }
 
   * { box-sizing: border-box; }
@@ -54,7 +54,24 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-headline);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* CRT scanline overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
   }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -169,7 +186,7 @@
   }
 
   .code-block {
-    background: #0d0f15;
+    background: #0c0c12;
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 1rem;
@@ -202,5 +219,97 @@
     font-size: 4rem;
     line-height: 1;
     font-weight: 700;
+  }
+
+  .dashboard-main {
+    margin-left: 240px;
+    padding: 2rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+}
+
+/* ─── Skeleton / Shimmer ───────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 25%,
+    #1e2130 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-text {
+  height: 0.875rem;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  height: 1.5rem;
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+/* ─── Mobile Responsive ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .grid-cols-2 { grid-template-columns: 1fr !important; }
+  .md\:grid-cols-3 { grid-template-columns: 1fr !important; }
+  .md\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .lg\:grid-cols-2 { grid-template-columns: 1fr !important; }
+  .lg\:grid-cols-6 { grid-template-columns: repeat(2, 1fr) !important; }
+
+  .dashboard-main {
+    margin-left: 0 !important;
+    padding: 1rem !important;
+    padding-top: 3.5rem !important;
+  }
+
+  .forge-panel, .forge-card {
+    border-radius: 8px;
+  }
+
+  /* Minimum 44px touch targets on mobile */
+  .forge-btn {
+    min-height: 44px;
+    padding: 0.625rem 1.25rem;
+  }
+
+  .forge-input {
+    min-height: 44px;
+    font-size: 1rem; /* prevent iOS zoom on focus */
+  }
+
+  /* Larger tap targets for interactive elements */
+  button, a[role="button"], [role="tab"] {
+    min-height: 44px;
+  }
+
+  /* Better textarea on mobile */
+  textarea.forge-input {
+    min-height: 120px;
+  }
+}
+
+/* ─── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--bg-card);
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
