@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, MapIcon, Zap, ArrowRight, Clock, Building2, Shield, Target, Flame } from "lucide-react";
+import GraceDayWidget from "@/components/GraceDayWidget";
 
 function getDaysRemaining(targetDate: Date | null | undefined): number | null {
   if (!targetDate) return null;
@@ -32,6 +33,13 @@ export default async function DashboardPage() {
 
   const isStudent = dbUser?.role === "student";
   const isMentorLearner = dbUser?.role === "mentor" && dbUser.isAlsoLearning;
+
+  // Grace days used this calendar month
+  const now = new Date();
+  const graceDaysUsed = await prisma.graceDay.count({
+    where: { userId, month: now.getMonth() + 1, year: now.getFullYear() },
+  });
+  const graceDaysLeft = Math.max(0, 5 - graceDaysUsed);
 
   // Combine remaining queries in parallel (user data already fetched above)
   const [activeRoadmap, orgMembership] = await Promise.all([
@@ -143,15 +151,21 @@ export default async function DashboardPage() {
       {!checkedInToday && activeRoadmap && (
         <div
           className="forge-panel"
-          style={{ padding: "1.5rem", marginBottom: "1.5rem", borderColor: "var(--red)", background: "rgba(255,45,45,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}
+          style={{ padding: "1.5rem", marginBottom: "1.5rem", borderColor: "var(--red)", background: "rgba(255,45,45,0.05)" }}
         >
-          <div>
-            <div style={{ fontFamily: "var(--font-headline)", fontSize: "1.125rem", fontWeight: 700, color: "var(--red)", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-              <AlertTriangle size={18} /> Check-in Required
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-headline)", fontSize: "1.125rem", fontWeight: 700, color: "var(--red)", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                <AlertTriangle size={18} /> Check-in Required
+              </div>
+              <div style={{ color: "var(--text-secondary)", fontSize: "0.9375rem" }}>You haven&apos;t checked in today. Complete your session before midnight.</div>
             </div>
-            <div style={{ color: "var(--text-secondary)", fontSize: "0.9375rem" }}>You haven&apos;t checked in today. Complete your session before midnight.</div>
+            <Link href="/dashboard/checkin" className="forge-btn forge-btn-primary">Start Check-in</Link>
           </div>
-          <Link href="/dashboard/checkin" className="forge-btn forge-btn-primary">Start Check-in</Link>
+          {/* Grace days */}
+          <div style={{ borderTop: "1px solid rgba(239,68,68,0.15)", paddingTop: "0.875rem" }}>
+            <GraceDayWidget graceDaysLeft={graceDaysLeft} />
+          </div>
         </div>
       )}
 

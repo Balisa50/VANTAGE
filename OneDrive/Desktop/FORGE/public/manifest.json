@@ -1,0 +1,20 @@
+{
+  "name": "The Forge",
+  "short_name": "Forge",
+  "description": "AI-powered proof-of-work accountability. Daily interrogations. Real consequences.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#060608",
+  "theme_color": "#060608",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["education", "productivity"],
+  "lang": "en"
+}

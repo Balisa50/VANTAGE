@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { highlightCode } from "@/lib/interrogation";
 import { formatTime } from "@/lib/utils";
-import { AlertTriangle, Check, X, HelpCircle, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, X, HelpCircle, Loader2, Share2, Copy, CheckCheck } from "lucide-react";
 
 interface OpenQuestion {
   questionNumber: number;
@@ -141,6 +141,7 @@ export default function InterrogationChat({
   const [verdict, setVerdict] = useState("");
   const [apiError, setApiError] = useState(false);
   const [showReveal, setShowReveal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // "I'm stuck" AI tutor state
   const [showTutor, setShowTutor] = useState(false);
@@ -401,6 +402,66 @@ export default function InterrogationChat({
                 >
                   {passed ? "Back to Dashboard →" : "Back to Dashboard"}
                 </button>
+
+                {/* Share your win — only on pass */}
+                {passed && (() => {
+                  const maxScore = TOTAL_QUESTIONS * MAX_POINTS;
+                  const shareText = `Just passed a The Forge interrogation ⚡\n${totalScore || runningScore}/${maxScore} pts · Proof-of-work AI accountability\n\nIf you're learning to code and want real accountability → theforge.app`;
+                  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+                  const handleCopy = () => {
+                    navigator.clipboard.writeText(shareText).then(() => {
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2500);
+                    });
+                  };
+                  return (
+                    <div style={{
+                      background: "rgba(245,158,11,0.05)",
+                      border: "1px solid rgba(245,158,11,0.15)",
+                      borderRadius: "10px",
+                      padding: "1rem 1.25rem",
+                    }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.625rem", color: "var(--accent)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.625rem", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                        <Share2 size={11} /> Share Your Win
+                      </div>
+                      <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "0.875rem" }}>
+                        {shareText}
+                      </p>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <a
+                          href={tweetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
+                            padding: "0.5rem",
+                            background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "6px", textDecoration: "none",
+                            color: "var(--text-primary)", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.8125rem",
+                            transition: "background 0.15s",
+                          }}
+                        >
+                          Post on X / Twitter
+                        </a>
+                        <button
+                          onClick={handleCopy}
+                          style={{
+                            display: "flex", alignItems: "center", gap: "0.375rem",
+                            padding: "0.5rem 0.875rem",
+                            background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.04)",
+                            border: copied ? "1px solid var(--green)" : "1px solid var(--border)",
+                            borderRadius: "6px", cursor: "pointer",
+                            color: copied ? "var(--green)" : "var(--text-secondary)",
+                            fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.8125rem",
+                            transition: "all 0.2s",
+                          }}
+                        >
+                          {copied ? <><CheckCheck size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* "I'm stuck" tutor — only after fail */}
                 {!passed && taskId && (

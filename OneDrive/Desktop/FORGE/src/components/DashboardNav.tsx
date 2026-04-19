@@ -25,6 +25,7 @@ import {
   Menu,
   X,
   Award,
+  Trophy,
 } from "lucide-react";
 
 interface DashboardNavProps {
@@ -51,6 +52,7 @@ function getNavItems(userRole: string, isAlsoLearning: boolean): NavItem[] {
         { href: "/dashboard/checkin",            label: "Check In",      Icon: ClipboardCheck },
         { href: "/dashboard/roadmap",            label: "Roadmap",       Icon: Map },
         { href: "/dashboard/pod",               label: "My Pod",        Icon: Users },
+        { href: "/dashboard/leaderboard",        label: "Leaderboard",   Icon: Trophy },
         { href: "/dashboard/journal",            label: "Journal",       Icon: BookOpen },
         { href: "/dashboard/calendar",           label: "Calendar",      Icon: CalendarDays },
         { href: "/dashboard/analytics",          label: "Analytics",     Icon: BarChart3 },
@@ -64,6 +66,7 @@ function getNavItems(userRole: string, isAlsoLearning: boolean): NavItem[] {
         { href: "/dashboard/checkin",            label: "Check In",      Icon: ClipboardCheck },
         { href: "/dashboard/roadmap",            label: "Roadmap",       Icon: Map },
         { href: "/dashboard/pod",               label: "My Pod",        Icon: Users },
+        { href: "/dashboard/leaderboard",        label: "Leaderboard",   Icon: Trophy },
         { href: "/dashboard/journal",            label: "Journal",       Icon: BookOpen },
         { href: "/dashboard/calendar",           label: "Calendar",      Icon: CalendarDays },
         { href: "/dashboard/analytics",          label: "Analytics",     Icon: BarChart3 },
@@ -79,6 +82,7 @@ function getNavItems(userRole: string, isAlsoLearning: boolean): NavItem[] {
             { href: "/dashboard/checkin",          label: "Check In",      Icon: ClipboardCheck },
             { href: "/dashboard/roadmap",          label: "Roadmap",       Icon: Map },
             { href: "/dashboard/pod",             label: "My Pod",        Icon: Users },
+            { href: "/dashboard/leaderboard",      label: "Leaderboard",   Icon: Trophy },
             { href: "/dashboard/journal",          label: "Journal",       Icon: BookOpen },
             { href: "/dashboard/calendar",         label: "Calendar",      Icon: CalendarDays },
             { href: "/dashboard/analytics",        label: "Analytics",     Icon: BarChart3 },
