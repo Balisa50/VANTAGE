@@ -41,7 +41,6 @@ export default function LandingPage() {
         <span style={{ fontFamily: "var(--font-headline)", color: "var(--accent)", fontSize: "1.375rem", fontWeight: 700 }}>The Forge</span>
         <div className="flex items-center gap-4">
           <Link href="/login" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-body)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", fontSize: "0.875rem" }} className="hover:text-white transition-colors">Sign In</Link>
-          <Link href="/register" className="forge-btn forge-btn-primary">Start Free</Link>
         </div>
       </nav>
 
