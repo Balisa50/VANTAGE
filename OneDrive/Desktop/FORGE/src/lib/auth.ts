@@ -47,15 +47,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
+      }
+      // Fetch onboarding status on every sign-in or when session is updated
+      if (user || trigger === "update") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: (token.id ?? user?.id) as string },
+          select: { onboardingDone: true, role: true, isGuest: true },
+        });
+        if (dbUser) {
+          token.onboardingDone = dbUser.onboardingDone;
+          token.role = dbUser.role;
+          token.isGuest = dbUser.isGuest;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (token.id && session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string | undefined;
+        session.user.onboardingDone = token.onboardingDone as boolean | undefined;
+        session.user.isGuest = token.isGuest as boolean | undefined;
       }
       return session;
     },
