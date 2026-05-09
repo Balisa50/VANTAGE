@@ -3,10 +3,6 @@
     {
       "path": "/api/generate-articles",
       "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/expire",
-      "schedule": "0 20 * * *"
     }
   ]
 }
