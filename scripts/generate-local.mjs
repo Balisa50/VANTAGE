@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Local article generator — bypasses Vercel timeout limits
+// Local article generator - bypasses Vercel timeout limits
 // Run: node scripts/generate-local.mjs
 
 import { createClient } from "@supabase/supabase-js";
 
-// Reads from environment variables — set via GitHub Actions secrets or .env.local
+// Reads from environment variables - set via GitHub Actions secrets or .env.local
 // For local runs: load from .env.local
 import { readFileSync } from "fs";
 import { resolve, dirname } from "path";
@@ -20,7 +20,7 @@ function loadEnv() {
         process.env[match[1]] = match[2].trim();
       }
     }
-  } catch { /* .env.local not found — use existing env vars */ }
+  } catch { /* .env.local not found - use existing env vars */ }
 }
 loadEnv();
 
@@ -86,7 +86,7 @@ THE VANTAGE STANDARD:
 
 WRITING STYLE:
 - Short paragraphs. 2-3 sentences max.
-- NEVER use em dashes (—). Use commas, semicolons, colons, or periods instead. This is critical.
+- NEVER use em dashes (-). Use commas, semicolons, colons, or periods instead. This is critical.
 - Zero filler. Never write "it's worth noting," "interestingly," "in today's rapidly evolving landscape."
 - No passive voice unless it genuinely reads better.
 - Write with earned confidence. Smart but never condescending.
