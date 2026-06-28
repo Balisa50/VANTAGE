@@ -1,4 +1,4 @@
-// HackerNews signal intelligence — free API, no key needed
+// HackerNews signal intelligence - free API, no key needed
 // https://github.com/HackerNews/API
 
 interface HNItem {
@@ -124,7 +124,7 @@ export function formatHNContext(signals: HNSignal): string {
   const parts: string[] = [];
 
   if (signals.topStories.length > 0) {
-    parts.push("HACKER NEWS — TOP STORIES RIGHT NOW:");
+    parts.push("HACKER NEWS - TOP STORIES RIGHT NOW:");
     for (const s of signals.topStories) {
       parts.push(
         `- "${s.title}" (${s.score} points, ${s.comments} comments) ${s.hnUrl}`
@@ -133,7 +133,7 @@ export function formatHNContext(signals: HNSignal): string {
   }
 
   if (signals.showHN.length > 0) {
-    parts.push("\nSHOW HN — WHAT BUILDERS ARE SHIPPING:");
+    parts.push("\nSHOW HN - WHAT BUILDERS ARE SHIPPING:");
     for (const s of signals.showHN) {
       parts.push(
         `- "${s.title}" (${s.score} points, ${s.comments} comments)`
