@@ -7,7 +7,7 @@ import { supabase, type Article } from "./lib/supabase";
 export const revalidate = 120;
 
 export default async function HomePage() {
-  // Only show articles from last 24 hours — always fresh
+  // Only show articles from last 24 hours - always fresh
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
   const { data } = await supabase
