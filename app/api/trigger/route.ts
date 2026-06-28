@@ -179,7 +179,7 @@ export async function GET(req: NextRequest) {
         }
       }
     } catch {
-      // Virlo unavailable — continue without it
+      // Virlo unavailable - continue without it
     }
   }
 
