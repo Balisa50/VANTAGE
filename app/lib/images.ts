@@ -1,4 +1,4 @@
-// Free Unsplash images by category — no API key needed
+// Free Unsplash images by category - no API key needed
 // Uses Unsplash Source which redirects to a random relevant photo
 
 const CATEGORY_QUERIES: Record<string, string> = {
