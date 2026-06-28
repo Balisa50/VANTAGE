@@ -13,7 +13,7 @@ export function useLocalStorage<T>(
       const item = window.localStorage.getItem(key);
       if (item) setStoredValue(JSON.parse(item));
     } catch {
-      // SSR or parse error — use initial
+      // SSR or parse error - use initial
     }
   }, [key]);
 
