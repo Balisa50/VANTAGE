@@ -39,7 +39,7 @@ body::before {
   opacity: 0.4;
 }
 
-/* Card hover — subtle lift + border glow */
+/* Card hover - subtle lift + border glow */
 .card-glow {
   transition: all 0.3s ease;
 }
