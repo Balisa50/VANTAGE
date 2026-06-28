@@ -81,7 +81,7 @@ async function main() {
       // Clean any em-dashes
       for (const key of Object.keys(article)) {
         if (typeof article[key] === "string") {
-          article[key] = article[key].replace(/\s*[—–]\s*/g, ", ").replace(/,\s*,/g, ",");
+          article[key] = article[key].replace(/\s*[-–]\s*/g, ", ").replace(/,\s*,/g, ",");
         }
       }
 
