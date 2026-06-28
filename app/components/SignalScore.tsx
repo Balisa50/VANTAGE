@@ -18,7 +18,7 @@ export default function SignalScore({ score }: { score: number }) {
         />
       </div>
       <span className="text-xs font-mono text-text-secondary whitespace-nowrap">
-        {score} — {label}
+        {score} - {label}
       </span>
     </div>
   );
