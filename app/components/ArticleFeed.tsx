@@ -27,7 +27,7 @@ export default function ArticleFeed({
           }
         }
       } catch {
-        // Silent — don't break the UI
+        // Silent - don't break the UI
       }
     }, 120_000);
     return () => clearInterval(interval);
