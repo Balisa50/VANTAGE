@@ -38,7 +38,7 @@ export async function GET() {
   const feed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>VANTAGE — AI-Powered Tech Intelligence</title>
+    <title>VANTAGE - AI-Powered Tech Intelligence</title>
     <link>${siteUrl}</link>
     <description>Tri-signal tech intelligence. Every story cross-referenced across news wires, Reddit, and HackerNews.</description>
     <language>en</language>
