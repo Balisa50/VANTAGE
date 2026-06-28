@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "How It Works | Vantage",
   description:
-    "How Vantage delivers tech intelligence — automated, opinionated, and global.",
+    "How Vantage delivers tech intelligence - automated, opinionated, and global.",
 };
 
 export default function AboutPage() {
@@ -62,7 +62,7 @@ export default function AboutPage() {
               description="Every article has a built-in conversation layer. Ask a follow-up, challenge the analysis, or go deeper on any angle."
             />
             <FeatureCard
-              title="Search — and always find"
+              title="Search - and always find"
               description="If we don't have it, Vantage generates a full analysis on the spot. You will never hit a dead end."
             />
             <FeatureCard
