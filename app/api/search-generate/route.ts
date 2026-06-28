@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       ARTICLE_SYSTEM_PROMPT,
       `The user is searching for: "${searchTerm}"
 
-Write a deep analytical article about this topic. Research this from your knowledge — what are the latest developments, the key players, the strategic implications? Write as if this just broke today.
+Write a deep analytical article about this topic. Research this from your knowledge - what are the latest developments, the key players, the strategic implications? Write as if this just broke today.
 
 If this is clearly not a tech/policy/markets story, still analyze it through a technology or strategic lens. Find the tech angle. There is always one.`
     );
