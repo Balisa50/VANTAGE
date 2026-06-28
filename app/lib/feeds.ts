@@ -1,5 +1,5 @@
 // Regional tech news via RSS feeds from ACTUAL local publications
-// No API key needed — these are public RSS/Atom feeds
+// No API key needed - these are public RSS/Atom feeds
 
 import type { NewsArticle } from "./newsapi";
 
@@ -11,7 +11,7 @@ interface FeedSource {
 
 // Real tech publications from each region
 const REGIONAL_FEEDS: FeedSource[] = [
-  // AFRICA — West, East, South, North, Pan-Africa
+  // AFRICA - West, East, South, North, Pan-Africa
   { name: "TechCabal", url: "https://techcabal.com/feed/", region: "africa" },
   { name: "TechPoint Africa", url: "https://techpoint.africa/feed/", region: "africa" },
   { name: "Disrupt Africa", url: "https://disrupt-africa.com/feed/", region: "africa" },
@@ -45,10 +45,10 @@ const REGIONAL_FEEDS: FeedSource[] = [
   { name: "LABS by Contxto", url: "https://labsnews.com/en/feed/", region: "americas" },
   { name: "BetaKit", url: "https://betakit.com/feed/", region: "americas" },
 
-  // GLOBAL — skip heavy feeds, NewsAPI handles global
+  // GLOBAL - skip heavy feeds, NewsAPI handles global
 ];
 
-// Simple RSS/Atom XML parser — extracts title, description, link from feed items
+// Simple RSS/Atom XML parser - extracts title, description, link from feed items
 function parseItems(xml: string, sourceName: string): NewsArticle[] {
   const items: NewsArticle[] = [];
 
