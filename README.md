@@ -10,15 +10,15 @@ The feed auto-refreshes. You do not need to go looking for things.
 
 ## Stack
 
-- Next.js — frontend
-- Claude API — article synthesis and signal scoring
-- Vercel — hosting and cron pipeline
+- Next.js - frontend
+- LLM API - article synthesis and signal scoring
+- Vercel - hosting and cron pipeline
 
 ## Running locally
 
 ```bash
 npm install
-cp .env.example .env.local   # add your Anthropic API key
+cp .env.example .env.local   # add your LLM API key
 npm run dev
 ```
 
