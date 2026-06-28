@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "edge";
 
-// Compact but sharp prompt — optimized for Vercel edge timeout
+// Compact but sharp prompt - optimized for Vercel edge timeout
 // Full supernatural prompt is used in scripts/generate-local.mjs
 const PIPELINE_PROMPT = `Sharp tech analyst. Write like Ben Thompson + Matt Levine + The Economist. Take positions. Follow the money. Name names, cite exact numbers. Headlines are verdicts. No em dashes. No filler. Short paragraphs.
 
@@ -24,7 +24,7 @@ function getDb() {
 }
 
 // Minimal endpoint: receive headline data, call Claude, insert.
-// No RSS fetching — that's done by the trigger.
+// No RSS fetching - that's done by the trigger.
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("x-chain-secret");
   if (secret !== process.env.CRON_SECRET) {
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       const lastQuote = cleaned.lastIndexOf('"');
       const lastColon = cleaned.lastIndexOf('":');
       if (lastColon > 0 && lastColon > cleaned.lastIndexOf('"}')) {
-        // Truncated mid-value — close the string and object
+        // Truncated mid-value - close the string and object
         cleaned = cleaned.slice(0, lastColon) + '":"truncated"}';
       } else if (lastQuote > 0) {
         cleaned = cleaned.slice(0, lastQuote + 1) + "}";
