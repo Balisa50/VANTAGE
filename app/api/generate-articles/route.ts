@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { slugify, REGIONS } from "../../lib/newsapi";
 import { fetchRegionalHeadlines } from "../../lib/feeds";
+import { nvidiaChat } from "../../lib/nvidia";
 
 export const runtime = "edge";
 
@@ -26,33 +27,13 @@ If NOT tech/business/policy: {"skip":true,"reason":"Not a tech story"}
 Return ONLY raw JSON:
 {"headline":"A verdict with thesis","subheadline":"One sharp sentence","category":"AI|Infrastructure|Startups|Big Tech|Policy|Markets","what_happened":"2-3 paragraphs. Names, numbers, dates.","why_it_matters":"3-4 paragraphs. Strong position. Second-order effects.","who_wins_loses":"2-3 paragraphs. Name companies, executives, countries.","what_to_watch":"1-2 paragraphs. Specific predictions with dates.","social_pulse":"2-3 sentences. What are engineers, founders, the tech community saying? What does their reaction reveal? Synthesize sentiment, not quotes.","full_body":"Complete article, 800+ words. Publication-ready. Hook opening. Every paragraph earns the next.","signal_score":"1-100"}`;
 
-// Direct Anthropic API call — no SDK needed, works in Edge Runtime
+// One-shot generation via NVIDIA's free endpoint (works in Edge Runtime).
 async function callClaude(systemPrompt: string, userContent: string): Promise<string> {
-  const apiKey = process.env.VANTAGE_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
-
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 2500,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userContent }],
-    }),
+  return nvidiaChat({
+    system: systemPrompt,
+    messages: [{ role: "user", content: userContent }],
+    maxTokens: 2500,
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Anthropic API error: ${res.status} ${err}`);
-  }
-
-  const data = await res.json();
-  return data.content?.[0]?.type === "text" ? data.content[0].text : "";
 }
 
 // Fetch global headlines via NewsAPI — direct fetch for edge compatibility

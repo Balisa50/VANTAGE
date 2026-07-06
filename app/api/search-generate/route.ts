@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
+import { nvidiaChat } from "../../lib/nvidia";
 import { slugify } from "../../lib/newsapi";
 
 export const runtime = "edge";
@@ -34,31 +35,11 @@ function getSupabaseAdmin() {
 }
 
 async function callClaude(systemPrompt: string, userContent: string): Promise<string> {
-  const apiKey = process.env.VANTAGE_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
-
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 3000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userContent }],
-    }),
+  return nvidiaChat({
+    system: systemPrompt,
+    messages: [{ role: "user", content: userContent }],
+    maxTokens: 3000,
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Anthropic API error: ${res.status} ${err}`);
-  }
-
-  const data = await res.json();
-  return data.content?.[0]?.type === "text" ? data.content[0].text : "";
 }
 
 export async function POST(req: NextRequest) {

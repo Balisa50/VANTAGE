@@ -1,16 +1,44 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { nvidiaChat, nvidiaStream, type ChatMessage } from "./nvidia";
 
-let _client: Anthropic | null = null;
+// Vantage now runs on NVIDIA's free endpoint (see lib/nvidia.ts). This shim
+// keeps the small slice of the Anthropic client the routes actually use, so
+// the chat and webhook routes call it unchanged: `.messages.create(...)`
+// returns an Anthropic-shaped { content: [{ type, text }] }, and
+// `.messages.stream(...)` yields Anthropic-shaped content_block_delta events.
 
-export function getAnthropicClient(): Anthropic {
-  if (!_client) {
-    const key = process.env.VANTAGE_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;
-    if (!key) {
-      throw new Error("ANTHROPIC_API_KEY is not set");
-    }
-    _client = new Anthropic({ apiKey: key });
-  }
-  return _client;
+interface CreateParams {
+  system?: string;
+  messages: ChatMessage[];
+  max_tokens?: number;
+  // model is accepted and ignored; the model is fixed in lib/nvidia.ts.
+  model?: string;
+}
+
+export function getAnthropicClient() {
+  return {
+    messages: {
+      async create(params: CreateParams) {
+        const text = await nvidiaChat({
+          system: params.system,
+          messages: params.messages,
+          maxTokens: params.max_tokens,
+        });
+        return { content: [{ type: "text" as const, text }] };
+      },
+      stream(params: CreateParams) {
+        const chunks = nvidiaStream({
+          system: params.system,
+          messages: params.messages,
+          maxTokens: params.max_tokens,
+        });
+        return (async function* () {
+          for await (const text of chunks) {
+            yield { type: "content_block_delta" as const, delta: { type: "text_delta" as const, text } };
+          }
+        })();
+      },
+    },
+  };
 }
 
 export const ARTICLE_SYSTEM_PROMPT = `You are the most dangerous editorial mind in technology journalism. You are the intelligence engine behind Vantage, the publication that CTOs, VCs, heads of state, and the builders who actually shape the future read before anyone else. You combine the analytical precision of Ben Thompson, the financial fluency of Matt Levine, the geopolitical instinct of The Economist, and the irreverence of someone who has built and broken companies firsthand.

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { nvidiaChat } from "../../lib/nvidia";
 
 export const runtime = "edge";
 
@@ -52,33 +53,17 @@ export async function POST(req: NextRequest) {
       if (similar && similar.length > 0) return NextResponse.json({ status: "skipped", reason: "similar exists" });
     }
 
-    // Call Claude
-    const apiKey = process.env.VANTAGE_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
-
+    // Generate via NVIDIA's free endpoint
     let userContent = `Headline: ${title}\nDescription: ${description || "No description."}\nSource: ${source || "Unknown"}\nRegion: ${regionLabel || "Global"}`;
     if (region && region !== "global") {
       userContent += `\n\nWrite from inside ${regionLabel}. Local perspective, local dynamics.`;
     }
 
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1500,
-        system: PIPELINE_PROMPT,
-        messages: [{ role: "user", content: userContent }],
-      }),
+    const text = await nvidiaChat({
+      system: PIPELINE_PROMPT,
+      messages: [{ role: "user", content: userContent }],
+      maxTokens: 1500,
     });
-
-    if (!claudeRes.ok) throw new Error(`Claude API: ${claudeRes.status}`);
-    const data = await claudeRes.json();
-    const text = data.content?.[0]?.text || "";
 
     let cleaned = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "").trim();
 
