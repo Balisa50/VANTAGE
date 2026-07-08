@@ -1,10 +1,19 @@
 // NVIDIA NIM client (OpenAI-compatible). Vantage moved off the paid Anthropic
-// API onto NVIDIA's free endpoint; one key, one model, same behaviour.
+// API onto NVIDIA's free endpoint. Leads with NVIDIA_MODEL and falls back down
+// a chain of free models (retrying transient errors) so a flaky response or a
+// model deprecation degrades gracefully instead of failing the request.
 // Set NVIDIA_API_KEY in the environment; NVIDIA_MODEL is optional.
 
 const NVIDIA_BASE = "https://integrate.api.nvidia.com/v1";
 export const NVIDIA_MODEL =
   process.env.NVIDIA_MODEL || "mistralai/mistral-medium-3.5-128b";
+
+// Model chain, tried in order. Primary is env-overridable; the rest are free
+// NVIDIA fallbacks. A model deprecation becomes a 1-line env fix, not an outage.
+const NVIDIA_MODELS: string[] = [
+  NVIDIA_MODEL,
+  "deepseek-ai/deepseek-v4-flash",
+].filter((m, i, a) => m && a.indexOf(m) === i);
 
 export type ChatMessage = { role: string; content: string };
 
@@ -21,12 +30,19 @@ function apiKey(): string {
   return key;
 }
 
-function body(opts: CallOpts, stream: boolean): string {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** A failure worth retrying the same model for (transient, not a bad request). */
+function isTransient(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+function body(model: string, opts: CallOpts, stream: boolean): string {
   const messages = opts.system
     ? [{ role: "system", content: opts.system }, ...opts.messages]
     : opts.messages;
   return JSON.stringify({
-    model: NVIDIA_MODEL,
+    model,
     messages,
     max_tokens: opts.maxTokens ?? 1024,
     temperature: opts.temperature ?? 0.7,
@@ -34,36 +50,80 @@ function body(opts: CallOpts, stream: boolean): string {
   });
 }
 
-/** One-shot completion. Returns the assistant text (empty string on no content). */
+/**
+ * One-shot completion with model fallback + per-model retry. Walks NVIDIA_MODELS,
+ * retrying a transient failure on the same model once before dropping to the
+ * next. Only throws once every model is exhausted.
+ */
 export async function nvidiaChat(opts: CallOpts): Promise<string> {
-  const res = await fetch(`${NVIDIA_BASE}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey()}`,
-    },
-    body: body(opts, false),
-  });
-  if (!res.ok) {
-    throw new Error(`NVIDIA API error: ${res.status} ${await res.text()}`);
+  let lastErr = "";
+  for (const model of NVIDIA_MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      let res: Response;
+      try {
+        res = await fetch(`${NVIDIA_BASE}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey()}`,
+          },
+          body: body(model, opts, false),
+        });
+      } catch (e) {
+        lastErr = `network: ${e instanceof Error ? e.message : String(e)}`;
+        if (attempt === 0) { await sleep(400); continue; }
+        break;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content ?? "";
+        if (text) return text;
+        lastErr = `empty response from ${model}`;
+        break; // empty → next model
+      }
+      lastErr = `NVIDIA API ${res.status} (${model}): ${(await res.text().catch(() => "")).slice(0, 200)}`;
+      if (isTransient(res.status) && attempt === 0) { await sleep(500); continue; }
+      break; // non-transient or retried → next model
+    }
   }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
+  throw new Error(`NVIDIA API error after all models: ${lastErr}`);
 }
 
-/** Streaming completion. Yields text chunks as they arrive (OpenAI SSE). */
+/**
+ * Streaming completion. Yields text chunks as they arrive (OpenAI SSE). Falls
+ * back down the model chain only on the INITIAL connection (before any bytes) —
+ * once a stream is flowing we can't switch models mid-response.
+ */
 export async function* nvidiaStream(opts: CallOpts): AsyncGenerator<string> {
-  const res = await fetch(`${NVIDIA_BASE}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey()}`,
-    },
-    body: body(opts, true),
-  });
-  if (!res.ok || !res.body) {
-    throw new Error(`NVIDIA API error: ${res.status}`);
+  let res: Response | null = null;
+  let lastErr = "";
+  for (const model of NVIDIA_MODELS) {
+    let attempt = 0;
+    for (; attempt < 2; attempt++) {
+      let r: Response;
+      try {
+        r = await fetch(`${NVIDIA_BASE}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey()}`,
+          },
+          body: body(model, opts, true),
+        });
+      } catch (e) {
+        lastErr = `network: ${e instanceof Error ? e.message : String(e)}`;
+        if (attempt === 0) { await sleep(400); continue; }
+        break;
+      }
+      if (r.ok && r.body) { res = r; break; }
+      lastErr = `NVIDIA API ${r.status}`;
+      if (isTransient(r.status) && attempt === 0) { await sleep(500); continue; }
+      break;
+    }
+    if (res) break;
   }
+  if (!res || !res.body) throw new Error(`NVIDIA API error (stream): ${lastErr}`);
+
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
