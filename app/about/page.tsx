@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "How It Works | Vantage",
   description:
-    "How Vantage delivers tech intelligence - automated, opinionated, and global.",
+    "How Vantage collects technology stories, scores them, and writes them up.",
 };
 
 export default function AboutPage() {
@@ -21,32 +21,32 @@ export default function AboutPage() {
         </a>
 
         <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-4">
-          Intelligence, not information.
+          How Vantage works
         </h2>
         <p className="text-text-secondary text-base leading-relaxed mb-12 max-w-2xl">
-          Most tech news tells you what happened. Vantage tells you what it means, who it affects, and what comes next.
+          Vantage collects technology stories, scores how widely each one is being discussed, and writes it up. It runs on a schedule with nobody in the loop.
         </p>
 
         <div className="space-y-0 mb-16">
           <PipelineStep
             number="01"
-            title="Vantage scans the global conversation"
-            description="Thousands of sources across the tech world: wire services, developer communities, builder forums, and regional publications. Not just what journalists are writing, but what engineers, founders, and the broader tech community are actually talking about."
+            title="It reads a spread of sources"
+            description="Wire services, developer communities, builder forums and regional publications. The point of the spread is that the input includes what engineers and founders are discussing, alongside what reporters have filed."
           />
           <PipelineStep
             number="02"
-            title="Stories are ranked by real-world signal"
-            description="Not all stories are equal. Vantage weighs each story based on how many independent sources are discussing it and how much engagement it's generating. A story buzzing across multiple communities carries more weight than a single press release."
+            title="Stories are scored by how widely they are covered"
+            description="Each story is weighted by how many independent sources are carrying it and how much engagement those sources are getting. Something running across several communities scores higher than a single press release."
           />
           <PipelineStep
             number="03"
-            title="Every article is a proper analysis"
-            description="Vantage doesn't rewrite headlines. Each story gets a full editorial treatment: what happened, why it matters, who wins and loses, and what to watch next. If something is a strategic mistake, Vantage says so. If it changes everything, Vantage explains why."
+            title="Each story is written up in full"
+            description="An article covers what happened, who it affects and what to watch next, rather than a reworded headline. The write-up is generated from the sources, so it is a starting point: follow the links before relying on it."
           />
           <PipelineStep
             number="04"
-            title="Built for the whole world"
-            description="The best tech stories are coming from every corner of the globe. Vantage covers six regions and frames each story through the lens that matters most, whether that's Nairobi's fintech boom, Seoul's semiconductor wars, or Brussels' regulatory machine."
+            title="Six regions, framed locally"
+            description="Coverage spans six regions, and each story is framed for where it comes from, whether that is fintech in Nairobi, semiconductors in Seoul or regulation in Brussels."
             last
           />
         </div>
@@ -58,24 +58,24 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <FeatureCard
-              title="Ask questions on any story"
-              description="Every article has a built-in conversation layer. Ask a follow-up, challenge the analysis, or go deeper on any angle."
+              title="Ask questions on a story"
+              description="Each article has a chat attached to it, so you can ask a follow-up or push back on what the analysis claims."
             />
             <FeatureCard
-              title="Search - and always find"
-              description="If we don't have it, Vantage generates a full analysis on the spot. You will never hit a dead end."
+              title="Search, or generate"
+              description="If a story is not in the archive yet, searching for it writes the analysis on the spot."
             />
             <FeatureCard
-              title="Your daily briefing"
-              description="The most important stories ranked by signal strength. Your morning in 2 minutes."
+              title="Daily briefing"
+              description="The day's stories in score order, meant to be skimmed rather than read through."
             />
             <FeatureCard
-              title="Save what matters"
-              description="Bookmark articles to come back to later. No account needed."
+              title="Save for later"
+              description="Bookmark articles to come back to. No account needed."
             />
             <FeatureCard
               title="Social pulse via Virlo"
-              description="See what's going viral across TikTok, YouTube, and Instagram in real time. Powered by Virlo's trend intelligence API."
+              description="What is trending on TikTok, YouTube and Instagram, pulled from Virlo's API."
             />
           </div>
         </div>
@@ -86,13 +86,13 @@ export default function AboutPage() {
           </h3>
           <div className="article-prose">
             <p className="text-text-secondary">
-              The tech news ecosystem is broken. Wire services optimize for speed, not depth. Opinion pieces optimize for engagement, not accuracy. And most of it is written for a single market.
+              Wire services move quickly and stay shallow, opinion pieces are written for engagement, and most of both is aimed at one market. I wanted something that read several kinds of source at once and used the overlap between them as the weighting.
             </p>
             <p className="text-text-secondary">
-              Vantage is built on a simple premise: the best intelligence comes from cross-referencing multiple sources, not relying on any single one. When traditional media, developer communities, and builder forums all converge on the same story, that story matters. When they diverge, that divergence is the story.
+              Where traditional media, developer communities and builder forums land on the same story, it is probably worth your attention. Where they disagree, the disagreement is usually the more interesting thing.
             </p>
             <p className="text-text-secondary">
-              No editors. No sponsors. No agenda. Just signal.
+              There are no editors and no sponsors here. It is also fully automated, which is the honest limitation: the analysis is only as good as the sources it happened to read, and it can be wrong.
             </p>
           </div>
         </div>

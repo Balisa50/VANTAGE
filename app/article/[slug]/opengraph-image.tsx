@@ -32,7 +32,7 @@ export default async function Image({
     "headline" | "subheadline" | "category" | "signal_score" | "signal_sources"
   > | null;
 
-  const headline = article?.headline ?? "Vantage Intelligence";
+  const headline = article?.headline ?? "Vantage";
   const category = article?.category ?? "Tech";
   const score = article?.signal_score ?? 50;
   const accentColor = CATEGORY_COLORS[category] ?? "#f59e0b";
@@ -153,7 +153,7 @@ export default async function Image({
               fontFamily: "sans-serif",
             }}
           >
-            AI-Powered Tech Intelligence
+            Technology stories, scored
           </span>
         </div>
       </div>

@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vantage-three-chi.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vantage-ab.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "VANTAGE - Tech Intelligence",
+  title: "VANTAGE - Technology briefing",
   description:
-    "Sharp analysis on the tech stories that matter, published the moment they break. Global coverage. No editors. No agenda.",
+    "Technology stories from six regions, written up and scored as they break.",
   openGraph: {
-    title: "VANTAGE - Tech Intelligence",
+    title: "VANTAGE - Technology briefing",
     description:
-      "Sharp analysis on the tech stories that matter. Global coverage across 6 regions.",
+      "Technology stories from six regions, written up and scored as they break.",
     type: "website",
     siteName: "Vantage",
   },
   twitter: {
     card: "summary_large_image",
-    title: "VANTAGE - Tech Intelligence",
+    title: "VANTAGE - Technology briefing",
     description:
-      "Sharp analysis on the tech stories that matter. Global coverage across 6 regions.",
+      "Technology stories from six regions, written up and scored as they break.",
   },
   alternates: {
     types: {

@@ -136,3 +136,21 @@ body::before {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ---------- scrollbars ---------- */
+
+/* Not drawn anywhere. Scrolling itself is untouched. */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*,
+*::before,
+*::after {
+  scrollbar-width: none;
+}
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

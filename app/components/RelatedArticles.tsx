@@ -27,7 +27,7 @@ export default async function RelatedArticles({
   return (
     <section className="mt-16 pt-8 border-t border-border">
       <h3 className="font-mono text-xs tracking-[0.2em] uppercase text-accent-amber mb-6">
-        Related Intelligence
+        Related stories
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {related.map((article) => (

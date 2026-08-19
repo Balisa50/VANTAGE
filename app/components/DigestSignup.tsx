@@ -49,7 +49,7 @@ export default function DigestSignup() {
       <div className="absolute inset-0 hero-glow pointer-events-none" />
       <div className="relative text-center py-10 px-4">
         <h3 className="font-mono text-xs tracking-[0.2em] uppercase text-accent-amber mb-1">
-          Intelligence Brief
+          Daily brief
         </h3>
         <p className="text-sm text-text-secondary mb-5">
           The stories that matter. Delivered.

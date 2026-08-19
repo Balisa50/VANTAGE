@@ -46,7 +46,7 @@ export default function ArticleFeed({
             <span className="text-xs font-mono text-accent-green uppercase tracking-widest">Scanning</span>
           </div>
           <p className="text-text-secondary font-serif text-xl italic">
-            Intelligence is being gathered.
+            No stories yet. The next run will fill this in.
           </p>
           <p className="mt-2 text-text-secondary/50 font-mono text-xs">
             Check back shortly.

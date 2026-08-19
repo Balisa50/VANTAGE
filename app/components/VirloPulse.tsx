@@ -142,7 +142,7 @@ export default function VirloPulse() {
 
       <div className="mt-3 pt-3 border-t border-border/50">
         <p className="text-[9px] font-mono text-text-secondary/30 text-center">
-          Powered by Virlo API
+          Source: Virlo API
         </p>
       </div>
     </div>
