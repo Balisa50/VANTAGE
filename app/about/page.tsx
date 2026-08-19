@@ -12,7 +12,7 @@ export default function AboutPage() {
     <div className="min-h-screen">
       <Masthead />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <main className="max-w-[920px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <a
           href="/"
           className="inline-flex items-center gap-2 text-sm font-mono text-text-secondary hover:text-accent-amber transition-colors mb-10"
