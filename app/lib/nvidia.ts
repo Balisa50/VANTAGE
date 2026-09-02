@@ -5,13 +5,26 @@
 // Set NVIDIA_API_KEY in the environment; NVIDIA_MODEL is optional.
 
 const NVIDIA_BASE = "https://integrate.api.nvidia.com/v1";
+
+// The default was mistralai/mistral-medium-3.5-128b, which reached end of life
+// on 2026-08-07 and now answers 410 to every request. That is one of the two
+// reasons the feed went empty: the primary model in the chain had been dead for
+// weeks. A 410 is not transient, so the chain did drop to the next model, but
+// with no key set (the other reason) nothing downstream could succeed either.
+//
+// The replacements are the ids the HireIQ backend selected by probing this same
+// endpoint on 2026-08-17, rather than by reading the model catalogue. Listing is
+// not availability here: ids appear in GET /v1/models that hang or answer 404.
 export const NVIDIA_MODEL =
-  process.env.NVIDIA_MODEL || "mistralai/mistral-medium-3.5-128b";
+  process.env.NVIDIA_MODEL || "nvidia/nemotron-3-super-120b-a12b";
 
 // Model chain, tried in order. Primary is env-overridable; the rest are free
 // NVIDIA fallbacks. A model deprecation becomes a 1-line env fix, not an outage.
+// Two families rather than two sizes of one, so a family-wide retirement does
+// not take the whole chain with it.
 const NVIDIA_MODELS: string[] = [
   NVIDIA_MODEL,
+  "nvidia/llama-3.3-nemotron-super-49b-v1.5",
   "deepseek-ai/deepseek-v4-flash",
 ].filter((m, i, a) => m && a.indexOf(m) === i);
 
@@ -56,6 +69,12 @@ function body(model: string, opts: CallOpts, stream: boolean): string {
  * next. Only throws once every model is exhausted.
  */
 export async function nvidiaChat(opts: CallOpts): Promise<string> {
+  // Fail fast on a missing key. apiKey() is called inside the fetch try-block,
+  // so without this the throw is caught as a network error, mislabelled, and
+  // retried against every model in the chain: six pointless attempts ending in
+  // a message that blames the network for a configuration problem.
+  apiKey();
+
   let lastErr = "";
   for (const model of NVIDIA_MODELS) {
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -95,6 +114,8 @@ export async function nvidiaChat(opts: CallOpts): Promise<string> {
  * once a stream is flowing we can't switch models mid-response.
  */
 export async function* nvidiaStream(opts: CallOpts): AsyncGenerator<string> {
+  apiKey(); // fail fast on a missing key, as in nvidiaChat above
+
   let res: Response | null = null;
   let lastErr = "";
   for (const model of NVIDIA_MODELS) {

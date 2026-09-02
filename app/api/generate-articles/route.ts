@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { slugify, REGIONS } from "../../lib/newsapi";
 import { fetchRegionalHeadlines } from "../../lib/feeds";
 import { nvidiaChat } from "../../lib/nvidia";
+import * as Sentry from "@sentry/nextjs";
 
 export const runtime = "edge";
 
@@ -183,20 +184,48 @@ async function handleGenerate(req: NextRequest) {
       }
     }
 
+    // Nothing generated is a failure, not a quiet success. This runs on a cron
+    // and nobody reads the response, so a run that produces zero articles has
+    // to announce itself or the feed simply stays empty. It did, for weeks.
+    if (created === 0 && results.length > 0) {
+      const reasons = results
+        .map((r) => r.status)
+        .filter((s) => s !== "created")
+        .slice(0, 5);
+      const message =
+        `generate-articles produced 0 articles for ${regionToRun} ` +
+        `across ${results.length} candidates: ${reasons.join(" | ")}`;
+      console.error(message);
+      Sentry.captureMessage(message, "error");
+    }
+
     // Chain next region
     const currentIdx = REGION_CHAIN.indexOf(regionToRun);
     const nextIdx = currentIdx + 1;
     if (nextIdx < REGION_CHAIN.length) {
       const nextRegion = REGION_CHAIN[nextIdx];
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vantage-three-chi.vercel.app";
+      // Deriving the origin from the incoming request beats a hardcoded
+      // fallback, which was still pointing at vantage-three-chi.vercel.app: an
+      // auto-generated preview URL from before the rename. If the env var was
+      // unset the chain called a stale host and the swallowed catch below hid
+      // it, so every region after the first silently never ran.
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
       fetch(`${siteUrl}/api/generate-articles?region=${nextRegion}`, {
         method: "POST",
         headers: { "x-chain-secret": process.env.CRON_SECRET ?? "" },
-      }).catch(() => {});
+      }).catch((err) => {
+        const message = `region chain to ${nextRegion} failed: ${
+          err instanceof Error ? err.message : String(err)
+        }`;
+        console.error(message);
+        Sentry.captureMessage(message, "error");
+      });
     }
 
     return NextResponse.json({ region: regionToRun, created, results });
   } catch (err) {
+    Sentry.captureException(err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Pipeline failed" },
       { status: 500 }
