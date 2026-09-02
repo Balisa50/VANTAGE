@@ -33,7 +33,7 @@ async function fetchItem(id: number): Promise<HNItem | null> {
   try {
     const res = await fetch(
       `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
-      { cache: "no-store" }
+      { cache: "no-store", signal: AbortSignal.timeout(10_000) }
     );
     if (!res.ok) return null;
     return await res.json();
@@ -46,7 +46,7 @@ async function fetchTopIds(endpoint: string, limit: number): Promise<number[]> {
   try {
     const res = await fetch(
       `https://hacker-news.firebaseio.com/v0/${endpoint}.json`,
-      { cache: "no-store" }
+      { cache: "no-store", signal: AbortSignal.timeout(10_000) }
     );
     if (!res.ok) return [];
     const ids: number[] = await res.json();

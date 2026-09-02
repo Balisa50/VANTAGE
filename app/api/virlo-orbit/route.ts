@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
 
     const res = await fetch("https://api.virlo.ai/v1/orbit", {
       method: "POST",
+      signal: AbortSignal.timeout(20_000),
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
@@ -59,6 +60,7 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(`https://api.virlo.ai/v1/orbit/${orbitId}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {

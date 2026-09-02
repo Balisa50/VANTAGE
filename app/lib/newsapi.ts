@@ -61,14 +61,14 @@ export async function fetchTopTechHeadlines(
   // Use "everything" endpoint for broader, better content
   const res = await fetch(
     `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&from=${from}&sortBy=relevancy&pageSize=20&language=en&apiKey=${apiKey}`,
-    { cache: "no-store" }
+    { cache: "no-store", signal: AbortSignal.timeout(15_000) }
   );
 
   if (!res.ok) {
     // Fallback to top-headlines
     const fallback = await fetch(
       `https://newsapi.org/v2/top-headlines?category=technology&language=en&pageSize=15&apiKey=${apiKey}`,
-      { cache: "no-store" }
+      { cache: "no-store", signal: AbortSignal.timeout(15_000) }
     );
     if (!fallback.ok) return [];
     const data = await fallback.json();

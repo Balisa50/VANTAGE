@@ -6,6 +6,15 @@
 
 const NVIDIA_BASE = "https://integrate.api.nvidia.com/v1";
 
+// Generation is slow, so this is generous, but unbounded is not an option: the
+// article cron walks a chain of models and a single stalled provider would hold
+// the function open until the platform killed it, taking every later region
+// with it. The stream ceiling is tighter because it covers only the initial
+// connection; once bytes are flowing the body is free to take as long as it
+// needs.
+const CHAT_TIMEOUT_MS = 60_000;
+const STREAM_CONNECT_TIMEOUT_MS = 20_000;
+
 // The default was mistralai/mistral-medium-3.5-128b, which reached end of life
 // on 2026-08-07 and now answers 410 to every request. That is one of the two
 // reasons the feed went empty: the primary model in the chain had been dead for
@@ -87,9 +96,13 @@ export async function nvidiaChat(opts: CallOpts): Promise<string> {
             Authorization: `Bearer ${apiKey()}`,
           },
           body: body(model, opts, false),
+          signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
         });
       } catch (e) {
-        lastErr = `network: ${e instanceof Error ? e.message : String(e)}`;
+        const timedOut = e instanceof Error && e.name === "TimeoutError";
+        lastErr = timedOut
+          ? `timeout after ${CHAT_TIMEOUT_MS}ms (${model})`
+          : `network: ${e instanceof Error ? e.message : String(e)}`;
         if (attempt === 0) { await sleep(400); continue; }
         break;
       }
@@ -130,6 +143,7 @@ export async function* nvidiaStream(opts: CallOpts): AsyncGenerator<string> {
             Authorization: `Bearer ${apiKey()}`,
           },
           body: body(model, opts, true),
+          signal: AbortSignal.timeout(STREAM_CONNECT_TIMEOUT_MS),
         });
       } catch (e) {
         lastErr = `network: ${e instanceof Error ? e.message : String(e)}`;

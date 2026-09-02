@@ -48,6 +48,7 @@ async function fetchSubreddit(
           "User-Agent": "Vantage-Newsroom/1.0",
         },
         cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
       }
     );
 

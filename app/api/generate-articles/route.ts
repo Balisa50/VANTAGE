@@ -214,6 +214,9 @@ async function handleGenerate(req: NextRequest) {
       fetch(`${siteUrl}/api/generate-articles?region=${nextRegion}`, {
         method: "POST",
         headers: { "x-chain-secret": process.env.CRON_SECRET ?? "" },
+        // The chain hands off and does not await the result, but an unbounded
+        // request still keeps this function alive waiting on it.
+        signal: AbortSignal.timeout(10_000),
       }).catch((err) => {
         const message = `region chain to ${nextRegion} failed: ${
           err instanceof Error ? err.message : String(err)
