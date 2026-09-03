@@ -25,8 +25,8 @@ export const maxDuration = 60;
 // of it. Under a hard 60s ceiling, three models with 13 seconds each all fail;
 // one model with 38 seconds can actually answer. The chain is there for a
 // model being retired or down, which is a fast failure, not for a slow one.
-const MODEL_DEADLINE_MS = 52_000;
-const MODEL_PER_CALL_MS = 45_000;
+const MODEL_DEADLINE_MS = 42_000;
+const MODEL_PER_CALL_MS = 36_000;
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -38,12 +38,15 @@ async function callModel(systemPrompt: string, userContent: string): Promise<str
   return nvidiaChat({
     system: systemPrompt,
     messages: [{ role: "user", content: userContent }],
-    // Sized from measurement rather than guessed. 1200 came back in 19s and
-    // was cut off mid-subheadline, which puts this model near 16ms a token, so
-    // 2500 lands around 40s and fits inside the 45s per-call budget. The
-    // article schema is nine fields including a full body; it does not fit in
-    // less.
-    maxTokens: 2500,
+    // Sized from measurement. 1200 tokens returned in 19s but was truncated
+    // mid-subheadline; 2500 did not come back inside the function ceiling at
+    // all, because the model time is only part of the 60s: the cache lookup,
+    // the cap query and the insert all sit inside it too.
+    //
+    // 1800 is the largest that has room to finish and still leave the deadline
+    // to expire before the platform does. On-demand articles are shorter than
+    // the ones the daily pipeline writes, which has a longer window to work in.
+    maxTokens: 1800,
     timeoutMs: MODEL_PER_CALL_MS,
     deadlineMs: MODEL_DEADLINE_MS,
   });
