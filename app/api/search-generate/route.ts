@@ -25,8 +25,8 @@ export const maxDuration = 60;
 // of it. Under a hard 60s ceiling, three models with 13 seconds each all fail;
 // one model with 38 seconds can actually answer. The chain is there for a
 // model being retired or down, which is a fast failure, not for a slow one.
-const MODEL_DEADLINE_MS = 50_000;
-const MODEL_PER_CALL_MS = 38_000;
+const MODEL_DEADLINE_MS = 52_000;
+const MODEL_PER_CALL_MS = 45_000;
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -38,10 +38,12 @@ async function callModel(systemPrompt: string, userContent: string): Promise<str
   return nvidiaChat({
     system: systemPrompt,
     messages: [{ role: "user", content: userContent }],
-    // 3000 was the Claude-era budget. The free NVIDIA models are slower per
-    // token, and an article this route actually returns beats a longer one
-    // the platform kills.
-    maxTokens: 1200,
+    // Sized from measurement rather than guessed. 1200 came back in 19s and
+    // was cut off mid-subheadline, which puts this model near 16ms a token, so
+    // 2500 lands around 40s and fits inside the 45s per-call budget. The
+    // article schema is nine fields including a full body; it does not fit in
+    // less.
+    maxTokens: 2500,
     timeoutMs: MODEL_PER_CALL_MS,
     deadlineMs: MODEL_DEADLINE_MS,
   });
