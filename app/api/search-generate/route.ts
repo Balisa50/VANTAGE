@@ -36,11 +36,16 @@ const MODEL_PER_CALL_MS = 40_000;
 // enough to be reliably fast and small enough to truncate mid-article; 2500
 // did not return inside the function ceiling at all.
 //
-// 1500 is the compromise. It succeeds when the model is having a good minute
-// and returns a 503 the caller can render when it is not. That is as far as
-// tuning goes: making this dependable needs either a faster model in the chain
-// above, or generating in the background and having the client poll, which is
-// the right shape for work that cannot promise to finish inside one request.
+// With the chain healthy again the working model returns 1500 tokens in 21s,
+// about 14ms a token, so 2200 lands near 31s and fits inside the 40s per-call
+// budget with room for the queries around it. 1500 truncated mid-article; the
+// schema is nine fields including a full body.
+//
+// This is tuned against one model on a free endpoint, so it is a good setting
+// rather than a guarantee. When the model is slow the caller gets a 503 it can
+// render. Making it dependable regardless of model latency means generating in
+// the background and having the client poll, which is the right shape for work
+// that cannot promise to finish inside one request.
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -60,7 +65,7 @@ async function callModel(systemPrompt: string, userContent: string): Promise<str
     // 1800 is the largest that has room to finish and still leave the deadline
     // to expire before the platform does. On-demand articles are shorter than
     // the ones the daily pipeline writes, which has a longer window to work in.
-    maxTokens: 1500,
+    maxTokens: 2200,
     timeoutMs: MODEL_PER_CALL_MS,
     deadlineMs: MODEL_DEADLINE_MS,
   });
