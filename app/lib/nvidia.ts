@@ -33,18 +33,23 @@ export const NVIDIA_MODEL =
 // not take the whole chain with it.
 // Verified 2026-09-03 by calling them, not by reading the catalogue.
 //
-// Both previous fallbacks are gone. nvidia/llama-3.3-nemotron-super-49b-v1.5
-// answers 410 with "reached its end of life on 2026-08-26", and
-// deepseek-ai/deepseek-v4-flash fails alongside it. They are removed rather
-// than left in place: a dead entry is not a fallback, it is four wasted calls
-// between a failure and the error message about it.
+// nvidia/llama-3.3-nemotron-super-49b-v1.5 is GONE. It answers 410, "reached
+// its end of life on 2026-08-26". It is removed from the chain, and if
+// NVIDIA_MODEL is still set to it in the environment then the primary slot is
+// dead too and every generation here is running on a fallback. Fix that in the
+// environment; do not rely on the chain to hide it.
 //
-// That leaves no fallback at all. If the primary is retired this whole site
-// stops generating, so replacements from build.nvidia.com should be added
-// here, each one confirmed by an actual completion call.
-const NVIDIA_MODELS: string[] = [NVIDIA_MODEL].filter(
-  (m, i, a) => m && a.indexOf(m) === i
-);
+// The chain deliberately keeps the built-in default even when NVIDIA_MODEL is
+// set, so a stale env var degrades to a working model instead of taking the
+// site down with it.
+const NVIDIA_FALLBACKS = [
+  "nvidia/nemotron-3-super-120b-a12b",
+  "deepseek-ai/deepseek-v4-flash",
+];
+
+const NVIDIA_MODELS: string[] = [NVIDIA_MODEL, ...NVIDIA_FALLBACKS]
+  .filter((m) => m && m !== "nvidia/llama-3.3-nemotron-super-49b-v1.5")
+  .filter((m, i, a) => a.indexOf(m) === i);
 
 export type ChatMessage = { role: string; content: string };
 
