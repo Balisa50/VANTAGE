@@ -19,8 +19,13 @@ export const maxDuration = 60;
 
 // The model gets less than the function does, so a slow answer comes back as
 // an error this route wrote rather than a gateway timeout with no body.
-const MODEL_DEADLINE_MS = 45_000;
-const MODEL_PER_CALL_MS = 20_000;
+//
+// The per-call figure is deliberately most of the budget rather than a third
+// of it. Under a hard 60s ceiling, three models with 13 seconds each all fail;
+// one model with 38 seconds can actually answer. The chain is there for a
+// model being retired or down, which is a fast failure, not for a slow one.
+const MODEL_DEADLINE_MS = 50_000;
+const MODEL_PER_CALL_MS = 38_000;
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -35,7 +40,7 @@ async function callModel(systemPrompt: string, userContent: string): Promise<str
     // 3000 was the Claude-era budget. The free NVIDIA models are slower per
     // token, and an article this route actually returns beats a longer one
     // the platform kills.
-    maxTokens: 1800,
+    maxTokens: 1200,
     timeoutMs: MODEL_PER_CALL_MS,
     deadlineMs: MODEL_DEADLINE_MS,
   });
