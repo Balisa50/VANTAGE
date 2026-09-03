@@ -26,7 +26,19 @@ export const maxDuration = 60;
 // one model with 38 seconds can actually answer. The chain is there for a
 // model being retired or down, which is a fast failure, not for a slow one.
 const MODEL_DEADLINE_MS = 42_000;
-const MODEL_PER_CALL_MS = 36_000;
+const MODEL_PER_CALL_MS = 20_000;
+
+// Fast models first, which is the opposite of the default chain.
+//
+// The default leads with nemotron-3-super-120b, a reasoning model. That is the
+// right choice for the nightly pipeline, where nothing is waiting. Here it
+// measured 19s for 1200 tokens on one call and over 36s for 1800 on another,
+// and latency that variable cannot be made to fit a 60s ceiling by tuning the
+// token count. A user waiting on a search gets the flash model.
+const FAST_MODELS = [
+  "deepseek-ai/deepseek-v4-flash",
+  "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+];
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -49,6 +61,7 @@ async function callModel(systemPrompt: string, userContent: string): Promise<str
     maxTokens: 1800,
     timeoutMs: MODEL_PER_CALL_MS,
     deadlineMs: MODEL_DEADLINE_MS,
+    models: FAST_MODELS,
   });
 }
 

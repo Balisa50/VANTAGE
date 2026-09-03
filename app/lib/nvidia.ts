@@ -58,6 +58,15 @@ interface CallOpts {
    * a gateway timeout it cannot.
    */
   deadlineMs?: number;
+  /**
+   * Override the model chain for this call.
+   *
+   * The default chain leads with the largest model, which is right for the
+   * nightly pipeline: nothing is waiting on it and quality is worth the time.
+   * A route answering a user under a function ceiling wants the opposite
+   * order, so it passes its own.
+   */
+  models?: string[];
 }
 
 function apiKey(): string {
@@ -105,8 +114,10 @@ export async function nvidiaChat(opts: CallOpts): Promise<string> {
       ? perCall
       : Math.min(perCall, opts.deadlineMs - (Date.now() - startedAt));
 
+  const chain = opts.models?.length ? opts.models : NVIDIA_MODELS;
+
   let lastErr = "";
-  for (const model of NVIDIA_MODELS) {
+  for (const model of chain) {
     for (let attempt = 0; attempt < 2; attempt++) {
       // Stop before starting a call the deadline cannot accommodate, rather
       // than starting one the platform will kill mid-flight.
