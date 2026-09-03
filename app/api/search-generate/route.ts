@@ -3,30 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 import { ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { nvidiaChat } from "../../lib/nvidia";
 import { slugify } from "../../lib/newsapi";
+import {
+  GLOBAL_PER_DAY,
+  ipIsOverLimit,
+  localGlobalIsOverLimit,
+  onDemandCountLast24h,
+} from "../../lib/rate-limit";
 
 export const runtime = "edge";
-
-// Rate limit: 3 on-demand generations per IP per hour, 30 per day globally
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-let dailyCount = 0;
-let dailyReset = Date.now() + 86_400_000;
-
-function isLimited(ip: string): boolean {
-  const now = Date.now();
-  if (now > dailyReset) { dailyCount = 0; dailyReset = now + 86_400_000; }
-  if (dailyCount >= 30) return true;
-
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + 3_600_000 });
-    dailyCount++;
-    return false;
-  }
-  entry.count++;
-  if (entry.count > 3) return true;
-  dailyCount++;
-  return false;
-}
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -44,8 +28,11 @@ async function callClaude(systemPrompt: string, userContent: string): Promise<st
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isLimited(ip)) {
-    return NextResponse.json({ error: "Rate limit reached. Try again later." }, { status: 429 });
+  if (ipIsOverLimit(ip)) {
+    return NextResponse.json(
+      { error: "Rate limit reached. Try again in an hour." },
+      { status: 429 }
+    );
   }
 
   try {
@@ -69,6 +56,23 @@ export async function POST(req: NextRequest) {
 
     if (existing && existing.length > 0) {
       return NextResponse.json({ article: existing[0] });
+    }
+
+    // The global cap is checked here, after the lookup rather than before it.
+    // Returning an article that already exists costs nothing, so being over
+    // the daily generation limit is no reason to refuse one. Only the branch
+    // below spends anything.
+    const generatedToday = await onDemandCountLast24h(db);
+    const overGlobalLimit =
+      generatedToday === null
+        ? localGlobalIsOverLimit()
+        : generatedToday >= GLOBAL_PER_DAY;
+
+    if (overGlobalLimit) {
+      return NextResponse.json(
+        { error: "Daily generation limit reached. Try again tomorrow." },
+        { status: 429 }
+      );
     }
 
     // Generate an analysis on the spot
