@@ -127,9 +127,11 @@ export async function POST(req: NextRequest) {
       ARTICLE_SYSTEM_PROMPT,
       `The user is searching for: "${searchTerm}"
 
-Write a deep analytical article about this topic. Research this from your knowledge - what are the latest developments, the key players, the strategic implications? Write as if this just broke today.
+Write a tight analytical article about this topic from your knowledge: the latest developments, the key players, the strategic implications. Write as if this just broke today.
 
-If this is clearly not a tech/policy/markets story, still analyze it through a technology or strategic lens. Find the tech angle. There is always one.`
+Keep it brief. Two or three sentences for each analysis field and around 250 words for full_body. This is generated while someone waits, so a complete short article is worth more than a long one that gets cut off. Return the JSON object and nothing before or after it.
+
+If this is clearly not a tech/policy/markets story, still analyse it through a technology or strategic lens.`
       );
     } catch (err) {
       // The model ran out of budget or the chain failed. Say so, with a status

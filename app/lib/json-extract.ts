@@ -82,6 +82,6 @@ export function extractJsonObject<T = Record<string, unknown>>(raw: string): T {
   }
 
   throw new Error(
-    `Model did not return parseable JSON. Response began: ${cleaned.slice(0, 200)}`
+    `Model did not return parseable JSON. Response began: ${cleaned.slice(0, 400)}`
   );
 }
