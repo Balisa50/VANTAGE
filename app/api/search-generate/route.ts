@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { ARTICLE_SYSTEM_PROMPT } from "../../lib/anthropic";
 import { nvidiaChat } from "../../lib/nvidia";
 import { slugify } from "../../lib/newsapi";
+import { extractJsonObject } from "../../lib/json-extract";
 import {
   GLOBAL_PER_DAY,
   ipIsOverLimit,
@@ -120,12 +121,21 @@ If this is clearly not a tech/policy/markets story, still analyze it through a t
       );
     }
 
-    const cleaned = text
-      .replace(/^```(?:json)?\s*\n?/i, "")
-      .replace(/\n?```\s*$/, "")
-      .trim();
-
-    const article = JSON.parse(cleaned);
+    let article: Record<string, string>;
+    try {
+      article = extractJsonObject<Record<string, string>>(text);
+    } catch (err) {
+      // The request succeeded and the model said something; it just was not
+      // an article. That is a different failure from a timeout and gets its
+      // own status so the client can tell them apart.
+      return NextResponse.json(
+        {
+          error: "The model did not return a usable article. Try again.",
+          detail: err instanceof Error ? err.message : String(err),
+        },
+        { status: 502 }
+      );
+    }
 
     if (article.skip) {
       return NextResponse.json(
