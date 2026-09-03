@@ -25,20 +25,22 @@ export const maxDuration = 60;
 // of it. Under a hard 60s ceiling, three models with 13 seconds each all fail;
 // one model with 38 seconds can actually answer. The chain is there for a
 // model being retired or down, which is a fast failure, not for a slow one.
-const MODEL_DEADLINE_MS = 42_000;
-const MODEL_PER_CALL_MS = 20_000;
+const MODEL_DEADLINE_MS = 46_000;
+const MODEL_PER_CALL_MS = 40_000;
 
-// Fast models first, which is the opposite of the default chain.
+// KNOWN LIMITATION, measured rather than assumed.
 //
-// The default leads with nemotron-3-super-120b, a reasoning model. That is the
-// right choice for the nightly pipeline, where nothing is waiting. Here it
-// measured 19s for 1200 tokens on one call and over 36s for 1800 on another,
-// and latency that variable cannot be made to fit a 60s ceiling by tuning the
-// token count. A user waiting on a search gets the flash model.
-const FAST_MODELS = [
-  "deepseek-ai/deepseek-v4-flash",
-  "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-];
+// The only model still alive on the free endpoint is a reasoning model, and
+// its latency for this article schema is not stable: 1200 tokens returned in
+// 19s on one call, 1800 tokens did not finish in 36s on another. 1200 is small
+// enough to be reliably fast and small enough to truncate mid-article; 2500
+// did not return inside the function ceiling at all.
+//
+// 1500 is the compromise. It succeeds when the model is having a good minute
+// and returns a 503 the caller can render when it is not. That is as far as
+// tuning goes: making this dependable needs either a faster model in the chain
+// above, or generating in the background and having the client poll, which is
+// the right shape for work that cannot promise to finish inside one request.
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -58,10 +60,9 @@ async function callModel(systemPrompt: string, userContent: string): Promise<str
     // 1800 is the largest that has room to finish and still leave the deadline
     // to expire before the platform does. On-demand articles are shorter than
     // the ones the daily pipeline writes, which has a longer window to work in.
-    maxTokens: 1800,
+    maxTokens: 1500,
     timeoutMs: MODEL_PER_CALL_MS,
     deadlineMs: MODEL_DEADLINE_MS,
-    models: FAST_MODELS,
   });
 }
 

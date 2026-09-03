@@ -31,11 +31,20 @@ export const NVIDIA_MODEL =
 // NVIDIA fallbacks. A model deprecation becomes a 1-line env fix, not an outage.
 // Two families rather than two sizes of one, so a family-wide retirement does
 // not take the whole chain with it.
-const NVIDIA_MODELS: string[] = [
-  NVIDIA_MODEL,
-  "nvidia/llama-3.3-nemotron-super-49b-v1.5",
-  "deepseek-ai/deepseek-v4-flash",
-].filter((m, i, a) => m && a.indexOf(m) === i);
+// Verified 2026-09-03 by calling them, not by reading the catalogue.
+//
+// Both previous fallbacks are gone. nvidia/llama-3.3-nemotron-super-49b-v1.5
+// answers 410 with "reached its end of life on 2026-08-26", and
+// deepseek-ai/deepseek-v4-flash fails alongside it. They are removed rather
+// than left in place: a dead entry is not a fallback, it is four wasted calls
+// between a failure and the error message about it.
+//
+// That leaves no fallback at all. If the primary is retired this whole site
+// stops generating, so replacements from build.nvidia.com should be added
+// here, each one confirmed by an actual completion call.
+const NVIDIA_MODELS: string[] = [NVIDIA_MODEL].filter(
+  (m, i, a) => m && a.indexOf(m) === i
+);
 
 export type ChatMessage = { role: string; content: string };
 
