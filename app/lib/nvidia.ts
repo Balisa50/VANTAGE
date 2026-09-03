@@ -44,6 +44,20 @@ interface CallOpts {
   messages: ChatMessage[];
   maxTokens?: number;
   temperature?: number;
+  /**
+   * Per-request timeout. Defaults to CHAT_TIMEOUT_MS.
+   */
+  timeoutMs?: number;
+  /**
+   * Total budget across the whole model chain, measured from entry.
+   *
+   * The per-request timeout bounds one call; it does not bound six. Three
+   * models times two attempts at 60s each is six minutes in the worst case,
+   * which is longer than any serverless platform will wait. A caller that has
+   * its own deadline passes it here and gets an error it can render instead of
+   * a gateway timeout it cannot.
+   */
+  deadlineMs?: number;
 }
 
 function apiKey(): string {
@@ -84,9 +98,24 @@ export async function nvidiaChat(opts: CallOpts): Promise<string> {
   // a message that blames the network for a configuration problem.
   apiKey();
 
+  const startedAt = Date.now();
+  const perCall = opts.timeoutMs ?? CHAT_TIMEOUT_MS;
+  const budgetLeft = () =>
+    opts.deadlineMs === undefined
+      ? perCall
+      : Math.min(perCall, opts.deadlineMs - (Date.now() - startedAt));
+
   let lastErr = "";
   for (const model of NVIDIA_MODELS) {
     for (let attempt = 0; attempt < 2; attempt++) {
+      // Stop before starting a call the deadline cannot accommodate, rather
+      // than starting one the platform will kill mid-flight.
+      const remaining = budgetLeft();
+      if (remaining <= 0) {
+        throw new Error(
+          `NVIDIA API deadline of ${opts.deadlineMs}ms exhausted. Last error: ${lastErr || "none"}`
+        );
+      }
       let res: Response;
       try {
         res = await fetch(`${NVIDIA_BASE}/chat/completions`, {
@@ -96,12 +125,12 @@ export async function nvidiaChat(opts: CallOpts): Promise<string> {
             Authorization: `Bearer ${apiKey()}`,
           },
           body: body(model, opts, false),
-          signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
+          signal: AbortSignal.timeout(remaining),
         });
       } catch (e) {
         const timedOut = e instanceof Error && e.name === "TimeoutError";
         lastErr = timedOut
-          ? `timeout after ${CHAT_TIMEOUT_MS}ms (${model})`
+          ? `timeout after ${remaining}ms (${model})`
           : `network: ${e instanceof Error ? e.message : String(e)}`;
         if (attempt === 0) { await sleep(400); continue; }
         break;
